@@ -36,13 +36,8 @@ out/
 ### VS Code ###
 .vscode/
 
-# application yml (환경별)
-application.yml
-application-local.yml
-application-dev.yml
-application-local-mysql.yml
-apppliation-local-postgres.yml
-
-# local db configs
+# 로컬 환경 설정 (시크릿 포함 — 커밋 금지)
 src/main/resources/application-local-mysql.yml
-src/main/resources/application-local-postgres.yml
+
+# 환경변수 파일 (시크릿 포함 — 커밋 금지)
+.env

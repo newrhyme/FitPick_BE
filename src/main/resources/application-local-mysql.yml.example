@@ -1,0 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: local-mysql
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/boilerplate?characterEncoding=UTF-8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    username: your_db_username
+    password: your_db_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  docker:
+    compose:
+      profiles:
+        active: local-mysql
+
+app:
+  profile-name: local-mysql

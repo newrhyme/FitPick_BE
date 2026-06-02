@@ -23,27 +23,34 @@ public class AuthService {
 
     @Transactional
     public void signUp(SignupRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new CustomException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
+        if (userRepository.existsByLoginId(request.loginId())) {
+            throw new CustomException(AuthErrorCode.LOGIN_ID_ALREADY_EXISTS);
         }
 
         String encodedPassword = passwordEncoder.encode(request.password());
-        User user = User.create(request.email(), encodedPassword, request.nickname());
+        User user = User.create(
+                request.loginId(),
+                encodedPassword,
+                request.name(),
+                request.phone(),
+                request.height(),
+                request.weight(),
+                request.ageGroup(),
+                request.address()
+        );
         userRepository.save(user);
     }
 
     @Transactional(readOnly = true)
     public AuthTokenResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByLoginId(request.loginId())
                 .orElseThrow(() -> new CustomException(AuthErrorCode.INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new CustomException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
-        String token = jwtProvider.generateAccessToken(
-                user.getId(), user.getEmail()
-        );
+        String token = jwtProvider.generateAccessToken(user.getId(), user.getRole().name());
 
         return new AuthTokenResponse(token);
     }

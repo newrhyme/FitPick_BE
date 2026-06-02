@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: fitpick
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+jwt:
+  secret: ${JWT_SECRET:fitpick-dev-only-secret-key-change-this-in-production-min32ch}
+  access-token-expiration-ms: 86400000   # 24시간
+
+app:
+  profile-name: default

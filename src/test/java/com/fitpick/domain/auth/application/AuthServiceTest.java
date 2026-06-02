@@ -32,49 +32,53 @@ class AuthServiceTest {
 
     @InjectMocks AuthService authService;
 
+    private SignupRequest sampleSignup(String loginId) {
+        return new SignupRequest(loginId, "Password123!", "홍길동", "010-0000-0000", 175, 70, "20대", "서울시");
+    }
+
     @Test
-    void 회원가입_이미_존재하는_이메일이면_예외() {
+    void 회원가입_이미_존재하는_아이디이면_예외() {
         // given
-        SignupRequest request = new SignupRequest("test1@example.com", "Password123!", "tester1");
-        when(userRepository.existsByEmail(request.email())).thenReturn(true);
+        SignupRequest request = sampleSignup("tester1");
+        when(userRepository.existsByLoginId(request.loginId())).thenReturn(true);
 
         // when & then
         assertThatThrownBy(() -> authService.signUp(request))
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
                     CustomException ce = (CustomException) ex;
-                    assertThat(ce.getErrorCode()).isEqualTo(AuthErrorCode.EMAIL_ALREADY_EXISTS);
+                    assertThat(ce.getErrorCode()).isEqualTo(AuthErrorCode.LOGIN_ID_ALREADY_EXISTS);
                 });
 
         verify(userRepository, never()).save(any());
     }
 
     @Test
-    void 회원가입_성공하면_유저를_저장한다() {
+    void 회원가입_성공하면_CUSTOMER_역할로_저장한다() {
         // given
-        SignupRequest request = new SignupRequest("new@example.com", "Password123!", "tester1");
-        when(userRepository.existsByEmail(request.email())).thenReturn(false);
+        SignupRequest request = sampleSignup("newuser");
+        when(userRepository.existsByLoginId(request.loginId())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("ENCODED");
 
         // when
         authService.signUp(request);
 
-        // then (save에 들어간 User를 캡쳐해서 값 검증)
+        // then
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
 
         User saved = captor.getValue();
-        assertThat(saved.getEmail()).isEqualTo("new@example.com");
+        assertThat(saved.getLoginId()).isEqualTo("newuser");
         assertThat(saved.getPassword()).isEqualTo("ENCODED");
-        assertThat(saved.getNickname()).isEqualTo("tester1");
-        assertThat(saved.getRole()).isEqualTo(Role.USER);
+        assertThat(saved.getName()).isEqualTo("홍길동");
+        assertThat(saved.getRole()).isEqualTo(Role.CUSTOMER);
     }
 
     @Test
-    void 로그인_이메일이_없으면_예외() {
+    void 로그인_아이디가_없으면_예외() {
         // given
-        LoginRequest request = new LoginRequest("nope@example.com", "Password123!");
-        when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
+        LoginRequest request = new LoginRequest("nope", "Password123!");
+        when(userRepository.findByLoginId(request.loginId())).thenReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> authService.login(request))
@@ -88,10 +92,10 @@ class AuthServiceTest {
     @Test
     void 로그인_비밀번호가_틀리면_예외() {
         // given
-        LoginRequest request = new LoginRequest("test@example.com", "WrongPassword!");
-        User user = User.create("test@example.com", "ENCODED", "tester1");
+        LoginRequest request = new LoginRequest("tester1", "WrongPassword!");
+        User user = User.create("tester1", "ENCODED", "홍길동", null, null, null, null, null);
 
-        when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
+        when(userRepository.findByLoginId(request.loginId())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(false);
 
         // when & then
@@ -108,10 +112,10 @@ class AuthServiceTest {
     @Test
     void 로그인_성공하면_토큰을_반환한다() {
         // given
-        LoginRequest request = new LoginRequest("test@example.com", "Password123!");
-        User user = User.create("test@example.com", "ENCODED", "tester1");
+        LoginRequest request = new LoginRequest("tester1", "Password123!");
+        User user = User.create("tester1", "ENCODED", "홍길동", null, null, null, null, null);
 
-        when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(user));
+        when(userRepository.findByLoginId(request.loginId())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
         when(jwtProvider.generateAccessToken(any(), anyString())).thenReturn("ACCESS_TOKEN");
 
@@ -120,6 +124,6 @@ class AuthServiceTest {
 
         // then
         assertThat(res.accessToken()).isEqualTo("ACCESS_TOKEN");
-        verify(jwtProvider).generateAccessToken(any(), eq(user.getEmail()));
+        verify(jwtProvider).generateAccessToken(any(), eq(Role.CUSTOMER.name()));
     }
 }

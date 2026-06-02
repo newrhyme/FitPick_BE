@@ -14,13 +14,13 @@ public interface AuthApiDocs {
 
     @Operation(
             summary = "회원가입",
-            description = "이메일, 비밀번호, 닉네임으로 회원가입 합니다."
+            description = "아이디, 비밀번호, 이름 등으로 회원가입 합니다. 역할은 서버에서 CUSTOMER로 고정됩니다."
     )
     ApiResponse<?> signup(@Valid @RequestBody SignupRequest signupRequest);
 
     @Operation(
             summary = "로그인",
-            description = "이메일과 비밀번호로 로그인 합니다."
+            description = "아이디와 비밀번호로 로그인 합니다."
     )
     ApiResponse<?> login(@Valid @RequestBody LoginRequest loginRequest);
 }

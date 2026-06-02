@@ -1,6 +1,7 @@
 package com.fitpick.domain.user.domain;
 
 public enum Role {
-    USER,
+    CUSTOMER,
+    STAFF,
     ADMIN
 }

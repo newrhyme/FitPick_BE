@@ -15,24 +15,57 @@ public class User extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 191)
-    private String email;
+    @Column(name = "login_id", nullable = false, unique = true, length = 50)
+    private String loginId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String nickname;
+    @Column(nullable = false, length = 50)
+    private String name;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Column
+    private Integer height;
+
+    @Column
+    private Integer weight;
+
+    @Column(name = "age_group", length = 20)
+    private String ageGroup;
+
+    @Column(length = 255)
+    private String address;
+
+    @Column(name = "profile_image_url", length = 500)
+    private String profileImageUrl;
+
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
 
-    public static User create(String email, String encodedPassword, String nickname) {
+    public static User create(String loginId, String encodedPassword, String name,
+                              String phone, Integer height, Integer weight,
+                              String ageGroup, String address) {
         return User.builder()
-                .email(email)
+                .loginId(loginId)
                 .password(encodedPassword)
-                .nickname(nickname)
-                .role(Role.USER)
+                .name(name)
+                .phone(phone)
+                .height(height)
+                .weight(weight)
+                .ageGroup(ageGroup)
+                .address(address)
+                .role(Role.CUSTOMER)
                 .build();
-    }}
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+}

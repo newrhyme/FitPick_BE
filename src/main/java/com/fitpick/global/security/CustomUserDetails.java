@@ -11,14 +11,13 @@ import java.util.List;
 public class CustomUserDetails implements UserDetails {
 
     private final Long userId;
-    private final String email;
+    private final String loginId;
     private final String password;
     private final String role;
 
-
     public CustomUserDetails(User user) {
         this.userId = user.getId();
-        this.email = user.getEmail();
+        this.loginId = user.getLoginId();
         this.password = user.getPassword();
         this.role = "ROLE_" + user.getRole().name();
     }
@@ -27,7 +26,6 @@ public class CustomUserDetails implements UserDetails {
         return userId;
     }
 
-    // UserDetails interface methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));
@@ -37,7 +35,7 @@ public class CustomUserDetails implements UserDetails {
     public String getPassword() { return password; }
 
     @Override
-    public String getUsername() { return email; }
+    public String getUsername() { return loginId; }
 
     @Override
     public boolean isAccountNonExpired() { return true; }
