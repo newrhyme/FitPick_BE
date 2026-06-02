@@ -1,12 +1,12 @@
-package com.fitpick.domain.auth.application;
+package com.fitpick.domain.auth.service;
 
 import com.fitpick.domain.auth.dto.AuthTokenResponse;
 import com.fitpick.domain.auth.dto.LoginRequest;
 import com.fitpick.domain.auth.dto.SignupRequest;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
-import com.fitpick.domain.user.domain.Role;
-import com.fitpick.domain.user.domain.User;
-import com.fitpick.domain.user.infrastructure.UserRepository;
+import com.fitpick.domain.user.entity.Role;
+import com.fitpick.domain.user.entity.User;
+import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.exception.CustomException;
 import com.fitpick.global.security.jwt.JwtProvider;
 import org.junit.jupiter.api.Test;
@@ -38,11 +38,9 @@ class AuthServiceTest {
 
     @Test
     void 회원가입_이미_존재하는_아이디이면_예외() {
-        // given
         SignupRequest request = sampleSignup("tester1");
         when(userRepository.existsByLoginId(request.loginId())).thenReturn(true);
 
-        // when & then
         assertThatThrownBy(() -> authService.signUp(request))
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
@@ -55,15 +53,12 @@ class AuthServiceTest {
 
     @Test
     void 회원가입_성공하면_CUSTOMER_역할로_저장한다() {
-        // given
         SignupRequest request = sampleSignup("newuser");
         when(userRepository.existsByLoginId(request.loginId())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("ENCODED");
 
-        // when
         authService.signUp(request);
 
-        // then
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
 
@@ -76,11 +71,9 @@ class AuthServiceTest {
 
     @Test
     void 로그인_아이디가_없으면_예외() {
-        // given
         LoginRequest request = new LoginRequest("nope", "Password123!");
         when(userRepository.findByLoginId(request.loginId())).thenReturn(Optional.empty());
 
-        // when & then
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
@@ -91,14 +84,12 @@ class AuthServiceTest {
 
     @Test
     void 로그인_비밀번호가_틀리면_예외() {
-        // given
         LoginRequest request = new LoginRequest("tester1", "WrongPassword!");
         User user = User.create("tester1", "ENCODED", "홍길동", null, null, null, null, null);
 
         when(userRepository.findByLoginId(request.loginId())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(false);
 
-        // when & then
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(CustomException.class)
                 .satisfies(ex -> {
@@ -111,7 +102,6 @@ class AuthServiceTest {
 
     @Test
     void 로그인_성공하면_토큰을_반환한다() {
-        // given
         LoginRequest request = new LoginRequest("tester1", "Password123!");
         User user = User.create("tester1", "ENCODED", "홍길동", null, null, null, null, null);
 
@@ -119,10 +109,8 @@ class AuthServiceTest {
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
         when(jwtProvider.generateAccessToken(any(), anyString())).thenReturn("ACCESS_TOKEN");
 
-        // when
         AuthTokenResponse res = authService.login(request);
 
-        // then
         assertThat(res.accessToken()).isEqualTo("ACCESS_TOKEN");
         verify(jwtProvider).generateAccessToken(any(), eq(Role.CUSTOMER.name()));
     }

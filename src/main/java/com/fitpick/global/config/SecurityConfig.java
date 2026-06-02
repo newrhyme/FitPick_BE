@@ -1,6 +1,6 @@
 package com.fitpick.global.config;
 
-import com.fitpick.domain.user.infrastructure.UserRepository;
+import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.security.jwt.JwtAuthenticationFilter;
 import com.fitpick.global.security.jwt.JwtProperties;
 import com.fitpick.global.security.jwt.JwtProvider;
@@ -8,12 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/v1/sample/**").permitAll()
                         .requestMatchers("/api/v1/auth/**", "/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/clothes/**").permitAll()
                         .anyRequest().authenticated()
                 )
 //         필요하면 여기에 entryPoint / accessDeniedHandler 설정
@@ -57,7 +58,7 @@ public class SecurityConfig {
         ;
 
         // JWT 인증 필터를 시큐리티 필터 체인에 추가
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

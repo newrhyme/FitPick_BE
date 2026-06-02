@@ -1,6 +1,6 @@
 package com.fitpick.global.security;
 
-import com.fitpick.domain.user.domain.User;
+import com.fitpick.domain.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

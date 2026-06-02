@@ -1,4 +1,4 @@
-package com.fitpick.domain.user.domain;
+package com.fitpick.domain.user.entity;
 
 import com.fitpick.global.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;

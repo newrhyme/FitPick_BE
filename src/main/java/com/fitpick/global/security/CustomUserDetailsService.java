@@ -1,6 +1,6 @@
 package com.fitpick.global.security;
 
-import com.fitpick.domain.user.infrastructure.UserRepository;
+import com.fitpick.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

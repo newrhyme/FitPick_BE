@@ -1,4 +1,4 @@
-package com.fitpick.domain.sample.presentation;
+package com.fitpick.domain.sample.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

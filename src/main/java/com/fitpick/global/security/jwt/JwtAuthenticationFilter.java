@@ -1,6 +1,6 @@
 package com.fitpick.global.security.jwt;
 
-import com.fitpick.domain.user.infrastructure.UserRepository;
+import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.security.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,6 +1,6 @@
-package com.fitpick.domain.user.infrastructure;
+package com.fitpick.domain.user.repository;
 
-import com.fitpick.domain.user.domain.User;
+import com.fitpick.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

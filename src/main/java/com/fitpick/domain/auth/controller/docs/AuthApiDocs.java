@@ -1,6 +1,5 @@
-package com.fitpick.domain.auth.presentation.docs;
+package com.fitpick.domain.auth.controller.docs;
 
-import com.fitpick.domain.auth.dto.AuthTokenResponse;
 import com.fitpick.domain.auth.dto.LoginRequest;
 import com.fitpick.domain.auth.dto.SignupRequest;
 import com.fitpick.global.common.response.ApiResponse;

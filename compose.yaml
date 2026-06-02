@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: boilerplate-mysql
+    container_name: fitpick-mysql
     profiles: ["local-mysql"]
     environment:
       MYSQL_DATABASE: '${MYSQL_DATABASE:-fitpick}'

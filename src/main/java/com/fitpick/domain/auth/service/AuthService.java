@@ -1,11 +1,11 @@
-package com.fitpick.domain.auth.application;
+package com.fitpick.domain.auth.service;
 
 import com.fitpick.domain.auth.dto.AuthTokenResponse;
 import com.fitpick.domain.auth.dto.LoginRequest;
 import com.fitpick.domain.auth.dto.SignupRequest;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
-import com.fitpick.domain.user.domain.User;
-import com.fitpick.domain.user.infrastructure.UserRepository;
+import com.fitpick.domain.user.entity.User;
+import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.exception.CustomException;
 import com.fitpick.global.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;

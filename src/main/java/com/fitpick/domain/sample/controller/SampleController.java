@@ -1,6 +1,6 @@
-package com.fitpick.domain.sample.presentation;
+package com.fitpick.domain.sample.controller;
 
-import com.fitpick.global.common.code.ErrorCode;
+import com.fitpick.domain.sample.dto.SampleRequest;
 import com.fitpick.global.common.code.GlobalErrorCode;
 import com.fitpick.global.common.code.SuccessCode;
 import com.fitpick.global.common.response.ApiResponse;
@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,23 +41,18 @@ public class SampleController {
      * GET /api/v1/sample/page?page=0&size=5&sort=id, desc
      */
     @GetMapping("/page")
-    public ApiResponse<PageResponse<Map<String, Object>>> page (@ParameterObject Pageable pageable) {
+    public ApiResponse<PageResponse<Map<String, Object>>> page(@ParameterObject Pageable pageable) {
 
-        // 1) 더미 데이터 30개 생성
         List<Map<String, Object>> all = java.util.stream.IntStream.rangeClosed(1, 30)
                 .mapToObj(i -> Map.<String, Object>of("id", i, "name", "item-" + i))
                 .toList();
 
-        // 2) Pageable 기반으로 subList 잘라서 content 만들기
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), all.size());
         List<Map<String, Object>> content = (start >= all.size()) ? List.of() : all.subList(start, end);
 
-        // 3) Page 구현체로 감싸기
         Page<Map<String, Object>> page = new PageImpl<>(content, pageable, all.size());
 
-        // 4) 공통 PageResponse로 변환해서 ApiResponse에 얹기
         return ApiResponse.success(SuccessCode.READ_SUCCESS, PageResponse.from(page));
-
     }
 }
