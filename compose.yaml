@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: boilerplate-mysql
+    profiles: ["local-mysql"]
+    environment:
+      MYSQL_DATABASE: 'boilerplate'
+      MYSQL_USER: 'boilerplate'
+      MYSQL_PASSWORD: '000624'
+      MYSQL_ROOT_PASSWORD: '000624'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  postgres:
+    image: postgres:15
+    container_name: boilerplate-postgres
+    profiles: ["local-postgres"]
+    environment:
+      POSTGRES_DB: 'boilerplate'
+      POSTGRES_USER: 'boilerplate'
+      POSTGRES_PASSWORD: '000624'
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boilerplate -d boilerplate"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mysql-data:
+  pg-data:
