@@ -1,0 +1,222 @@
+# FitPick - 0001 initial schema (MySQL 8)
+# Tables ordered so that referenced tables are created before their referrers (inline FKs).
+databaseChangeLog:
+
+  - changeSet:
+      id: 0001-create-stores
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: stores
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: address, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0002-create-users
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: login_id, type: varchar(50), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_users_login_id } }
+              - column: { name: password, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: phone, type: varchar(20) }
+              - column: { name: height, type: int }
+              - column: { name: weight, type: int }
+              - column: { name: age_group, type: varchar(20) }
+              - column: { name: address, type: varchar(255) }
+              - column: { name: profile_image_url, type: varchar(500) }
+              - column: { name: fcm_token, type: varchar(500) }
+              - column: { name: role, type: varchar(20), defaultValue: CUSTOMER, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0003-create-clothes
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: clothes
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: store_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_clothes_store, references: stores(id) } }
+              - column: { name: title, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: description, type: text }
+              - column: { name: category, type: varchar(30) }
+              - column: { name: material, type: varchar(100) }
+              - column: { name: price, type: int, constraints: { nullable: false } }
+              - column: { name: thumbnail_image_url, type: varchar(500) }
+              - column: { name: is_active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0004-create-clothes-images
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: clothes_images
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: clothes_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_clothes_images_clothes, references: clothes(id) } }
+              - column: { name: image_url, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: sort_order, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0005-create-clothes-options
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: clothes_options
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: clothes_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_clothes_options_clothes, references: clothes(id) } }
+              - column: { name: size, type: varchar(20) }
+              - column: { name: color, type: varchar(30) }
+              - column: { name: stock_quantity, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0006-create-nfc-tags
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: nfc_tags
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: clothes_id, type: bigint, constraints: { nullable: false, unique: true, uniqueConstraintName: uq_nfc_tags_clothes, foreignKeyName: fk_nfc_tags_clothes, references: clothes(id) } }
+              - column: { name: tag_uid, type: varchar(100), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_nfc_tags_tag_uid } }
+              - column: { name: is_active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0007-create-carts
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: carts
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_carts_user, references: users(id) } }
+              - column: { name: store_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_carts_store, references: stores(id) } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: carts
+            columnNames: user_id, store_id
+            constraintName: uq_carts_user_store
+
+  - changeSet:
+      id: 0008-create-cart-items
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: cart_items
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: cart_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_cart_items_cart, references: carts(id) } }
+              - column: { name: clothes_option_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_cart_items_option, references: clothes_options(id) } }
+              - column: { name: quantity, type: int, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0009-create-orders
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: orders
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_orders_user, references: users(id) } }
+              - column: { name: store_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_orders_store, references: stores(id) } }
+              - column: { name: order_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: order_status, type: varchar(20), defaultValue: CREATED, constraints: { nullable: false } }
+              - column: { name: total_price, type: int, constraints: { nullable: false } }
+              - column: { name: paid_at, type: datetime }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0010-create-order-items
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: order_items
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: order_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_order_items_order, references: orders(id) } }
+              - column: { name: clothes_option_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_order_items_option, references: clothes_options(id) } }
+              - column: { name: quantity, type: int, constraints: { nullable: false } }
+              - column: { name: price, type: int, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0011-create-notifications
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_notifications_user, references: users(id) } }
+              - column: { name: order_id, type: bigint, constraints: { foreignKeyName: fk_notifications_order, references: orders(id) } }
+              - column: { name: title, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: body, type: varchar(500) }
+              - column: { name: notification_type, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: is_read, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0012-create-view-histories
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: view_histories
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_view_histories_user, references: users(id) } }
+              - column: { name: clothes_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_view_histories_clothes, references: clothes(id) } }
+              - column: { name: source, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            indexName: idx_view_histories_user_created
+            tableName: view_histories
+            columns:
+              - column: { name: user_id }
+              - column: { name: created_at }
+
+  - changeSet:
+      id: 0013-create-try-ons
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: try_ons
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_try_ons_user, references: users(id) } }
+              - column: { name: original_image_url, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: generated_image_url, type: varchar(500) }
+              - column: { name: status, type: varchar(20), defaultValue: PENDING, constraints: { nullable: false } }
+              - column: { name: created_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: datetime, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 0014-create-try-on-items
+      author: fitpick
+      changes:
+        - createTable:
+            tableName: try_on_items
+            columns:
+              - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: try_on_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_try_on_items_try_on, references: try_ons(id) } }
+              - column: { name: clothes_option_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_try_on_items_option, references: clothes_options(id) } }
