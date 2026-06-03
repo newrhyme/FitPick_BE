@@ -12,5 +12,5 @@ public interface ClothesService {
     PageResponse<ClothesListResponse> getClothesList(ClothesCategory category, Pageable pageable);
 
     // 상품 상세 조회
-    ClothesDetailResponse getClothesDetail(Long clothesId);
+    ClothesDetailResponse getClothesDetail(Long clothesId, Long userId);
 }
