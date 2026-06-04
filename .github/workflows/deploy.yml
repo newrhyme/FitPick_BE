@@ -1,0 +1,36 @@
+name: Deploy FitPick Backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            cd ~/FitPick_BE
+
+            echo "Pull latest code"
+            git pull origin main
+
+            echo "Build Spring Boot jar"
+            chmod +x gradlew
+            ./gradlew clean bootJar -x test
+
+            echo "Restart Docker containers"
+            docker compose -f compose.prod.yaml --env-file .env up -d --build
+
+            echo "Show running containers"
+            docker ps
