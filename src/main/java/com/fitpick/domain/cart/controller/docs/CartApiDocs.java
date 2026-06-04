@@ -1,6 +1,7 @@
 package com.fitpick.domain.cart.controller.docs;
 
 import com.fitpick.domain.cart.dto.CartItemAddRequest;
+import com.fitpick.domain.cart.dto.CartItemQuantityUpdateRequest;
 import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +17,7 @@ public interface CartApiDocs {
     ApiResponse<?> getMyCart(CustomUserDetails userDetails);
 
     @Operation(summary = "장바구니 항목 수량 변경", description = "장바구니 항목의 수량을 변경합니다.")
-    ApiResponse<?> changeQuantity(CustomUserDetails userDetails, Long cartItemId, int quantity);
+    ApiResponse<?> changeQuantity(CustomUserDetails userDetails, Long cartItemId, CartItemQuantityUpdateRequest request);
 
     @Operation(summary = "장바구니 항목 삭제", description = "장바구니에서 항목을 제거합니다.")
     ApiResponse<?> removeItem(CustomUserDetails userDetails, Long cartItemId);

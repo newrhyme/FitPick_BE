@@ -1,6 +1,7 @@
 package com.fitpick.domain.cart.service;
 
 import com.fitpick.domain.cart.dto.CartItemAddRequest;
+import com.fitpick.domain.cart.dto.CartItemQuantityUpdateRequest;
 import com.fitpick.domain.cart.dto.CartResponse;
 import com.fitpick.domain.cart.entity.Cart;
 import com.fitpick.domain.cart.entity.CartItem;
@@ -20,7 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CartServiceImpl implements CartService{
+public class CartServiceImpl implements CartService {
 
     private static final Long DEFAULT_STORE_ID = 1L;
 
@@ -82,9 +83,9 @@ public class CartServiceImpl implements CartService{
 
     @Override
     @Transactional
-    public CartResponse changeQuantity(Long userId, Long cartItemId, int quantity) {
+    public CartResponse changeQuantity(Long userId, Long cartItemId, CartItemQuantityUpdateRequest request) {
         // 1) 수량 검증
-        if (quantity < 1) {
+        if (request.quantity() < 1) {
             throw new CustomException(CartErrorCode.INVALID_QUANTITY);
         }
 
@@ -96,12 +97,12 @@ public class CartServiceImpl implements CartService{
         validateOwner(item, userId);
 
         // 4) 재고 체크
-        if (item.getClothesOption().getStockQuantity() < quantity) {
+        if (item.getClothesOption().getStockQuantity() < request.quantity()) {
             throw new CustomException(CartErrorCode.OUT_OF_STOCK);
         }
 
         // 5) 수량 변경
-        item.changeQuantity(quantity);
+        item.changeQuantity(request.quantity());
 
         return getMyCart(userId);
     }

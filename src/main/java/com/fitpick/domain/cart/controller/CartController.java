@@ -2,6 +2,7 @@ package com.fitpick.domain.cart.controller;
 
 import com.fitpick.domain.cart.controller.docs.CartApiDocs;
 import com.fitpick.domain.cart.dto.CartItemAddRequest;
+import com.fitpick.domain.cart.dto.CartItemQuantityUpdateRequest;
 import com.fitpick.domain.cart.dto.CartResponse;
 import com.fitpick.domain.cart.service.CartService;
 import com.fitpick.global.common.code.SuccessCode;
@@ -40,9 +41,9 @@ public class CartController implements CartApiDocs {
     public ApiResponse<?> changeQuantity(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long cartItemId,
-            @RequestParam int quantity
+            @RequestBody CartItemQuantityUpdateRequest request
     ) {
-        CartResponse response = cartService.changeQuantity(userDetails.getUserId(), cartItemId, quantity);
+        CartResponse response = cartService.changeQuantity(userDetails.getUserId(), cartItemId, request);
         return ApiResponse.success(SuccessCode.UPDATE_SUCCESS, response);
     }
 

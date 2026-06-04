@@ -1,6 +1,7 @@
 package com.fitpick.domain.cart.service;
 
 import com.fitpick.domain.cart.dto.CartItemAddRequest;
+import com.fitpick.domain.cart.dto.CartItemQuantityUpdateRequest;
 import com.fitpick.domain.cart.dto.CartResponse;
 
 public interface CartService {
@@ -12,7 +13,7 @@ public interface CartService {
     CartResponse getMyCart(Long userId);
 
     // 수량 변경
-    CartResponse changeQuantity(Long userId, Long cartItemId, int quantity);
+    CartResponse changeQuantity(Long userId, Long cartItemId, CartItemQuantityUpdateRequest request);
 
     // 삭제
     CartResponse removeItem(Long userId, Long cartItemId);
