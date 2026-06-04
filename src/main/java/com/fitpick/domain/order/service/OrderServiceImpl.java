@@ -140,7 +140,7 @@ public class OrderServiceImpl implements OrderService{
     @Override
     @Transactional
     public OrderResponse cancelOrder(Long userId, Long orderId) {
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithItemsAndClothes(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 1) 권한 검증: 본인 주문만 (CUSTOMER 기준)
