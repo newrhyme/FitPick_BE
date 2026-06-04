@@ -14,7 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 public interface ClothesApiDocs {
 
     @Operation(
-            summary = "상품 리스트 조회 - CD 테스트 잘되나요?",
+            summary = "상품 리스트 조회",
             description = "활성 상품 목록을 최신순으로 조회합니다. category 파라미터로 필터링, page/size로 페이징 가능합니다."
     )
     ApiResponse<?> getClothesList(

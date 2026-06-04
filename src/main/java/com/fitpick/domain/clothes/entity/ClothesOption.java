@@ -37,7 +37,6 @@ public class ClothesOption extends BaseTimeEntity {
                 .build();
     }
 
-
     @Builder
     private ClothesOption(Clothes clothes, String size, String color, Integer stockQuantity) {
         this.clothes = clothes;

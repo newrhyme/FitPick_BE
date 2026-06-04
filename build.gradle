@@ -2,6 +2,9 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.9'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.jetbrains.kotlin.jvm'
+    id "org.jetbrains.kotlin.plugin.jpa" version '2.3.21'
+    id "org.jetbrains.kotlin.plugin.spring" version '2.3.21'
 }
 
 group = 'com.fitpick'
@@ -52,6 +55,8 @@ dependencies {
     // Swagger dependencies
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.8.9'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
 tasks.named('test') {
