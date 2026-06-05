@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/sample/**").permitAll()
                         .requestMatchers("/api/v1/auth/**", "/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/clothes/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("STAFF", "ADMIN")
                         .anyRequest().authenticated()
                 )
 //         필요하면 여기에 entryPoint / accessDeniedHandler 설정

@@ -1,6 +1,7 @@
 package com.fitpick.domain.order.repository;
 
 import com.fitpick.domain.order.entity.Order;
+import com.fitpick.domain.order.entity.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         where o.id = :orderId
     """)
     Optional<Order> findByIdWithItemsAndClothes(@Param("orderId") Long orderId);
-}
+
+    // status 필터용 (admin 목록)
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable)
+;}
