@@ -31,7 +31,6 @@ public class OrderController implements OrderApiDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         OrderResponse response = orderService.orderFromCart(userDetails.getUserId());
-        log.error("현재 계정 " + userDetails.getUserId());
         return ApiResponse.success(SuccessCode.OK, response);
     }
 
@@ -45,7 +44,7 @@ public class OrderController implements OrderApiDocs {
     }
 
     @GetMapping("/{orderId}")
-    public ApiResponse<?> gerOrder(
+    public ApiResponse<?> getOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long orderId
     ) {

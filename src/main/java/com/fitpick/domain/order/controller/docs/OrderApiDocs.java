@@ -18,7 +18,7 @@ public interface OrderApiDocs {
     ApiResponse<?> orderDirect(CustomUserDetails userDetails, DirectOrderRequest request);
 
     @Operation(summary = "주문 단건 조회", description = "본인 주문 상세 조회 (아이템 포함)")
-    ApiResponse<?> gerOrder(CustomUserDetails userDetails, Long orderId);
+    ApiResponse<?> getOrder(CustomUserDetails userDetails, Long orderId);
 
     @Operation(summary = "내 주문 목록", description = "본인 주문 목록(최신순, 페이지네이션)")
     ApiResponse<?> getMyOrders(CustomUserDetails userDetails, @ParameterObject Pageable pageable);
