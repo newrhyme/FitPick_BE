@@ -2,7 +2,7 @@ package com.fitpick.global.exception;
 
 import com.fitpick.global.common.code.ErrorCode;
 import com.fitpick.global.common.code.GlobalErrorCode;
-import com.fitpick.global.common.response.ErrorResponse;
+import com.fitpick.global.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -19,39 +19,34 @@ public class GlobalExceptionHandler {
 
     // CustomException 처리
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+    public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException e) {
         ErrorCode errorCode = e.getErrorCode();
-        ErrorResponse errorResponse = ErrorResponse.of(errorCode);
-        return new ResponseEntity<>(errorResponse, errorCode.getHttpStatus());
+        return new ResponseEntity<>(ApiResponse.error(errorCode), errorCode.getHttpStatus());
     }
 
     // Validation 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
-        // 필드별 오류 메시지 맵 생성
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidation(MethodArgumentNotValidException e) {
         Map<String, String> fieldErrors = new HashMap<>();
 
-        // 각 필드 오류를 맵에 추가
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
 
         ErrorCode errorCode = GlobalErrorCode.VALIDATION_ERROR;
 
-        // 응답 생성 및 반환
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(ErrorResponse.of(errorCode, fieldErrors));
+                .body(ApiResponse.error(errorCode, fieldErrors));
     }
 
     // 그 외 모든 예외 처리
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnknown(Exception e) {
+    public ResponseEntity<ApiResponse<Void>> handleUnknown(Exception e) {
         log.error("처리되지 않은 예외 발생", e);
         ErrorCode errorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
-                .body(ErrorResponse.of(errorCode));
+                .body(ApiResponse.error(errorCode));
     }
-
 }

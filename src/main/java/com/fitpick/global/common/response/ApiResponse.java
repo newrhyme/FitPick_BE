@@ -1,5 +1,6 @@
 package com.fitpick.global.common.response;
 
+import com.fitpick.global.common.code.ErrorCode;
 import com.fitpick.global.common.code.SuccessCode;
 
 import java.time.OffsetDateTime;
@@ -24,6 +25,14 @@ public class ApiResponse<T> {
 
     public static ApiResponse<Void> success(SuccessCode successCode) {
         return new ApiResponse<>(successCode.getCode(), successCode.getMessage(), null);
+    }
+
+    public static <T> ApiResponse<T> error(ErrorCode errorCode, T data) {
+        return new ApiResponse<>(errorCode.getCode(), errorCode.getMessage(), data);
+    }
+
+    public static ApiResponse<Void> error(ErrorCode errorCode) {
+        return new ApiResponse<>(errorCode.getCode(), errorCode.getMessage(), null);
     }
 
     public String getCode() {

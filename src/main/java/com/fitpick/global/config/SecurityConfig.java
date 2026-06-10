@@ -3,7 +3,7 @@ package com.fitpick.global.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.common.code.GlobalErrorCode;
-import com.fitpick.global.common.response.ErrorResponse;
+import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.security.jwt.JwtAuthenticationFilter;
 import com.fitpick.global.security.jwt.JwtProperties;
 import com.fitpick.global.security.jwt.JwtProvider;
@@ -67,7 +67,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding("UTF-8");
                             response.getWriter().write(
                                     objectMapper.writeValueAsString(
-                                            ErrorResponse.of(GlobalErrorCode.UNAUTHORIZED)
+                                            ApiResponse.error(GlobalErrorCode.UNAUTHORIZED)
                                     )
                             );
                         })
@@ -77,7 +77,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding("UTF-8");
                             response.getWriter().write(
                                     objectMapper.writeValueAsString(
-                                            ErrorResponse.of(GlobalErrorCode.FORBIDDEN)
+                                            ApiResponse.error(GlobalErrorCode.FORBIDDEN)
                                     )
                             );
                         })
