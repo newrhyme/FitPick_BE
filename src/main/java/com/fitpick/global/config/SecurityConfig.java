@@ -1,6 +1,9 @@
 package com.fitpick.global.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitpick.domain.user.repository.UserRepository;
+import com.fitpick.global.common.code.GlobalErrorCode;
+import com.fitpick.global.common.response.ErrorResponse;
 import com.fitpick.global.security.jwt.JwtAuthenticationFilter;
 import com.fitpick.global.security.jwt.JwtProperties;
 import com.fitpick.global.security.jwt.JwtProvider;
@@ -9,6 +12,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +28,7 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     private final String[] SWAGGER_WHITELIST = {
             "/v3/api-docs/**",
@@ -54,12 +60,29 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("STAFF", "ADMIN")
                         .anyRequest().authenticated()
                 )
-//         필요하면 여기에 entryPoint / accessDeniedHandler 설정
-//                .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
-//                .cors(Customizer.withDefaults())
-        ;
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, e) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                            ErrorResponse.of(GlobalErrorCode.UNAUTHORIZED)
+                                    )
+                            );
+                        })
+                        .accessDeniedHandler((request, response, e) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                            ErrorResponse.of(GlobalErrorCode.FORBIDDEN)
+                                    )
+                            );
+                        })
+                );
 
-        // JWT 인증 필터를 시큐리티 필터 체인에 추가
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

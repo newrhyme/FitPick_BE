@@ -1,11 +1,9 @@
 package com.fitpick.global.common.response;
 
 import com.fitpick.global.common.code.SuccessCode;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.OffsetDateTime;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
     private final String code;
