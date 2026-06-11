@@ -43,6 +43,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
 
+    @Column(name = "try_on_image_url", length = 500)
+    private String tryOnImageUrl;
+
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
 

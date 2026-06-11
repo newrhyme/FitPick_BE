@@ -17,6 +17,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 내 주문 목록 (최신순 + 페이징)
     Page<Order> findByUserId(Long userId, Pageable pageable);
 
+    // 마이페이지 주문 건수
+    long countByUserId(Long userId);
+
     // 주문 단건 조회
     Optional<Order> findByIdAndUserId(Long id, Long userId);
 

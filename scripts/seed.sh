@@ -89,6 +89,12 @@ echo "  ✅ 완료"
 
 # ─────────────────────────────────────────────────────────────
 echo ""
+echo "── 2-1. customer04 가상 착용 이미지 등록 ────────────"
+db "UPDATE users SET try_on_image_url = 'https://fitpick-images.s3.ap-northeast-2.amazonaws.com/demo_try_on_customer04.jpg' WHERE login_id = 'customer04';"
+echo "  ✅ customer04 가상 착용 사진 등록"
+
+# ─────────────────────────────────────────────────────────────
+echo ""
 echo "── 3. 재고 초기화 (GPT 노트 기준 옵션 41~60) ───────"
 db "
 UPDATE clothes_options SET stock_quantity = 15 WHERE id = 41;

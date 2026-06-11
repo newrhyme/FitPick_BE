@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0016-add-try-on-image-url-to-users
+      author: fitpick
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: try_on_image_url
+                  type: varchar(500)
