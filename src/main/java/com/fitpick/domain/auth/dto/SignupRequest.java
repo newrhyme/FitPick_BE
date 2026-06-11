@@ -1,5 +1,6 @@
 package com.fitpick.domain.auth.dto;
 
+import com.fitpick.domain.user.entity.AgeGroup;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,8 +26,8 @@ public record SignupRequest(
         @Schema(description = "몸무게 (kg)", example = "70")
         Integer weight,
 
-        @Schema(description = "연령대", example = "20대")
-        String ageGroup,
+        @Schema(description = "연령대 (TEENS / TWENTIES / THIRTIES / FORTIES_PLUS)", example = "TWENTIES")
+        AgeGroup ageGroup,
 
         @Schema(description = "주소", example = "서울시 강남구")
         String address

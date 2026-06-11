@@ -27,11 +27,11 @@ public interface AuthApiDocs {
 
     @Operation(
             summary = "로그인",
-            description = "아이디와 비밀번호로 로그인합니다. 성공 시 JWT access token을 반환합니다."
+            description = "아이디와 비밀번호로 로그인합니다. 성공 시 JWT access token과 사용자 정보(role, ageGroup 등)를 반환합니다."
     )
     @SecurityRequirements
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공 — accessToken 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공 — accessToken + user 정보 반환"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 검증 실패"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치 (A002)")
     })

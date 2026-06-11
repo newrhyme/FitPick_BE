@@ -1,7 +1,8 @@
 package com.fitpick.domain.auth.service;
 
-import com.fitpick.domain.auth.dto.AuthTokenResponse;
 import com.fitpick.domain.auth.dto.LoginRequest;
+import com.fitpick.domain.auth.dto.LoginResponse;
+import com.fitpick.domain.auth.dto.LoginUserResponse;
 import com.fitpick.domain.auth.dto.SignupRequest;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
 import com.fitpick.domain.user.entity.User;
@@ -42,7 +43,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthTokenResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByLoginId(request.loginId())
                 .orElseThrow(() -> new CustomException(AuthErrorCode.INVALID_CREDENTIALS));
 
@@ -52,6 +53,6 @@ public class AuthService {
 
         String token = jwtProvider.generateAccessToken(user.getId(), user.getRole().name());
 
-        return new AuthTokenResponse(token);
+        return new LoginResponse(token, LoginUserResponse.from(user));
     }
 }

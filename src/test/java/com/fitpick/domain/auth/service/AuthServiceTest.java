@@ -1,9 +1,10 @@
 package com.fitpick.domain.auth.service;
 
-import com.fitpick.domain.auth.dto.AuthTokenResponse;
 import com.fitpick.domain.auth.dto.LoginRequest;
+import com.fitpick.domain.auth.dto.LoginResponse;
 import com.fitpick.domain.auth.dto.SignupRequest;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
+import com.fitpick.domain.user.entity.AgeGroup;
 import com.fitpick.domain.user.entity.Role;
 import com.fitpick.domain.user.entity.User;
 import com.fitpick.domain.user.repository.UserRepository;
@@ -33,7 +34,7 @@ class AuthServiceTest {
     @InjectMocks AuthService authService;
 
     private SignupRequest sampleSignup(String loginId) {
-        return new SignupRequest(loginId, "Password123!", "홍길동", "010-0000-0000", 175, 70, "20대", "서울시");
+        return new SignupRequest(loginId, "Password123!", "홍길동", "010-0000-0000", 175, 70, AgeGroup.TWENTIES, "서울시");
     }
 
     @Test
@@ -67,6 +68,7 @@ class AuthServiceTest {
         assertThat(saved.getPassword()).isEqualTo("ENCODED");
         assertThat(saved.getName()).isEqualTo("홍길동");
         assertThat(saved.getRole()).isEqualTo(Role.CUSTOMER);
+        assertThat(saved.getAgeGroup()).isEqualTo(AgeGroup.TWENTIES);
     }
 
     @Test
@@ -101,7 +103,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void 로그인_성공하면_토큰을_반환한다() {
+    void 로그인_성공하면_토큰과_사용자정보를_반환한다() {
         LoginRequest request = new LoginRequest("tester1", "Password123!");
         User user = User.create("tester1", "ENCODED", "홍길동", null, null, null, null, null);
 
@@ -109,9 +111,12 @@ class AuthServiceTest {
         when(passwordEncoder.matches(request.password(), user.getPassword())).thenReturn(true);
         when(jwtProvider.generateAccessToken(any(), anyString())).thenReturn("ACCESS_TOKEN");
 
-        AuthTokenResponse res = authService.login(request);
+        LoginResponse res = authService.login(request);
 
         assertThat(res.accessToken()).isEqualTo("ACCESS_TOKEN");
+        assertThat(res.user().loginId()).isEqualTo("tester1");
+        assertThat(res.user().name()).isEqualTo("홍길동");
+        assertThat(res.user().role()).isEqualTo(Role.CUSTOMER.name());
         verify(jwtProvider).generateAccessToken(any(), eq(Role.CUSTOMER.name()));
     }
 }

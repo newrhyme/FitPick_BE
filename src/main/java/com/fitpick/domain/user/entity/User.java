@@ -33,8 +33,9 @@ public class User extends BaseTimeEntity {
     @Column
     private Integer weight;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "age_group", length = 20)
-    private String ageGroup;
+    private AgeGroup ageGroup;
 
     @Column(length = 255)
     private String address;
@@ -51,7 +52,7 @@ public class User extends BaseTimeEntity {
 
     public static User create(String loginId, String encodedPassword, String name,
                               String phone, Integer height, Integer weight,
-                              String ageGroup, String address) {
+                              AgeGroup ageGroup, String address) {
         return User.builder()
                 .loginId(loginId)
                 .password(encodedPassword)
