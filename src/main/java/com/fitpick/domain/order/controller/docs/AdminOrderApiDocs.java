@@ -49,4 +49,10 @@ public interface AdminOrderApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "허용되지 않는 상태 전이 (OD006)")
     })
     ApiResponse<?> updateStatus(Long orderId, OrderStatusUpdateRequest request);
+
+    @Operation(
+            summary = "관리자 주문 요약 조회",
+            description = "오늘 (Asia/Seoul 기준) 주문의 상태별 개수 조회,  (STAFF/ADMIN 전용)"
+    )
+    ApiResponse<?> getOrderStats();
 }

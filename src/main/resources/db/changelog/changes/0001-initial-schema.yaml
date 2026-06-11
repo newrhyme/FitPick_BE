@@ -220,3 +220,22 @@ databaseChangeLog:
               - column: { name: id, type: bigint, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
               - column: { name: try_on_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_try_on_items_try_on, references: try_ons(id) } }
               - column: { name: clothes_option_id, type: bigint, constraints: { nullable: false, foreignKeyName: fk_try_on_items_option, references: clothes_options(id) } }
+
+  - changeSet:
+      id: 0015-seed-staff-user
+      author: fitpick
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM users WHERE login_id = 'staff01'
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: login_id, value: "staff01" }
+              - column: { name: password, value: "$2a$12$P5XzBqe23xxq35E/P7JMDe33Tdv3EUW7nI6Mqb273uSGVjfjzsyuS" }
+              - column: { name: name, value: "직원01" }
+              - column: { name: role, value: "STAFF" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }

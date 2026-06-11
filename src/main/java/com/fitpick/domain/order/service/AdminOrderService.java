@@ -1,6 +1,7 @@
 package com.fitpick.domain.order.service;
 
 import com.fitpick.domain.order.dto.AdminOrderDetailResponse;
+import com.fitpick.domain.order.dto.AdminOrderStatsResponse;
 import com.fitpick.domain.order.dto.AdminOrderSummaryResponse;
 import com.fitpick.domain.order.dto.OrderStatusUpdateRequest;
 import com.fitpick.domain.order.entity.OrderStatus;
@@ -17,4 +18,7 @@ public interface AdminOrderService {
 
     // 상태 변경 (PAID -> PREPARING -> PICKED_UP)
     AdminOrderDetailResponse updateStatus(Long orderId, OrderStatusUpdateRequest request);
+
+    // 주문 상태 요약 (완료, 준비, 결제 완료, 픽업, 캔슬)
+    AdminOrderStatsResponse getOrderStats();
 }

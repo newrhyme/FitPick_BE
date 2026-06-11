@@ -2,6 +2,7 @@ package com.fitpick.domain.order.controller;
 
 import com.fitpick.domain.order.controller.docs.AdminOrderApiDocs;
 import com.fitpick.domain.order.dto.AdminOrderDetailResponse;
+import com.fitpick.domain.order.dto.AdminOrderStatsResponse;
 import com.fitpick.domain.order.dto.AdminOrderSummaryResponse;
 import com.fitpick.domain.order.dto.OrderStatusUpdateRequest;
 import com.fitpick.domain.order.entity.OrderStatus;
@@ -47,5 +48,11 @@ public class AdminOrderController implements AdminOrderApiDocs {
     ) {
         AdminOrderDetailResponse response = adminOrderService.updateStatus(orderId, request);
         return ApiResponse.success(SuccessCode.UPDATE_SUCCESS, response);
+    }
+
+    @GetMapping("/summary")
+    public ApiResponse<?> getOrderStats() {
+        AdminOrderStatsResponse response = adminOrderService.getOrderStats();
+        return ApiResponse.success(SuccessCode.READ_SUCCESS, response);
     }
 }

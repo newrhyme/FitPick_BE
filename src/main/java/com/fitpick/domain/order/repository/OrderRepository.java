@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -29,5 +31,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByIdWithItemsAndClothes(@Param("orderId") Long orderId);
 
     // status 필터용 (admin 목록)
-    Page<Order> findByStatus(OrderStatus status, Pageable pageable)
-;}
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
+    @Query("""
+        select o.status AS status, COUNT(o) AS count
+        from Order o
+        where o.createdAt >= :start
+        and o.createdAt < :end
+        group by o.status
+    """)
+    List<OrderStatusCountProjection> countTodayOrdersGroupByStatus(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+}

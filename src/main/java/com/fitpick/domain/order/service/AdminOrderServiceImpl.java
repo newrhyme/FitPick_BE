@@ -3,12 +3,14 @@ package com.fitpick.domain.order.service;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
 import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.domain.order.dto.AdminOrderDetailResponse;
+import com.fitpick.domain.order.dto.AdminOrderStatsResponse;
 import com.fitpick.domain.order.dto.AdminOrderSummaryResponse;
 import com.fitpick.domain.order.dto.OrderStatusUpdateRequest;
 import com.fitpick.domain.order.entity.Order;
 import com.fitpick.domain.order.entity.OrderStatus;
 import com.fitpick.domain.order.exception.OrderErrorCode;
 import com.fitpick.domain.order.repository.OrderRepository;
+import com.fitpick.domain.order.repository.OrderStatusCountProjection;
 import com.fitpick.domain.user.entity.User;
 import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.common.response.PageResponse;
@@ -18,6 +20,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,5 +86,41 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         return AdminOrderDetailResponse.of(order, user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminOrderStatsResponse getOrderStats() {
+        // 1) 오늘 범위 (ASIA/Seoul 기준)
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+        LocalDate today = LocalDate.now(zone);
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.plusDays(1).atStartOfDay();
+
+        // 2) status별 count 조회
+        List<OrderStatusCountProjection> results = orderRepository.countTodayOrdersGroupByStatus(start, end);
+
+        // 3) Map으로 변환 (없는 status는 0으로 처리)
+        Map<OrderStatus, Long> countMap = results.stream()
+                .collect(Collectors.toMap(
+                        OrderStatusCountProjection::getStatus,
+                        OrderStatusCountProjection::getCount
+                ));
+
+        long paidCount       = countMap.getOrDefault(OrderStatus.PAID, 0L);
+        long preparingCount  = countMap.getOrDefault(OrderStatus.PREPARING, 0L);
+        long readyCount      = countMap.getOrDefault(OrderStatus.READY, 0L);
+        long pickedUpCount   = countMap.getOrDefault(OrderStatus.PICKED_UP, 0L);
+        long canceledCount   = countMap.getOrDefault(OrderStatus.CANCELED, 0L);
+        long todayTotalCount = paidCount + preparingCount + readyCount + pickedUpCount + canceledCount;
+
+        return new AdminOrderStatsResponse(
+                todayTotalCount,
+                paidCount,
+                preparingCount,
+                readyCount,
+                pickedUpCount,
+                canceledCount
+        );
     }
 }
