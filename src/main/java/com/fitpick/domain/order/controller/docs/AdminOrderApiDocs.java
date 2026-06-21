@@ -26,7 +26,7 @@ public interface AdminOrderApiDocs {
 
     @Operation(
             summary = "관리자 주문 상세 조회",
-            description = "주문자 정보 + 주문 항목 + 결제/생성 시간을 포함한 상세 정보를 조회합니다. (STAFF/ADMIN 전용)"
+            description = "주문자 정보(이름·전화번호 포함) + 주문 항목 + 결제/생성 시간을 포함한 상세 정보를 조회합니다. (STAFF/ADMIN 전용)"
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({

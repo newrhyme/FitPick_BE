@@ -22,6 +22,9 @@ public record AdminOrderDetailResponse(
         @Schema(description = "주문자 이름", example = "홍길동")
         String userName,
 
+        @Schema(description = "주문자 전화번호", example = "010-1000-0001")
+        String userPhone,
+
         @Schema(description = "주문 유형 (CART / DIRECT)", example = "CART")
         String orderType,
 
@@ -49,6 +52,7 @@ public record AdminOrderDetailResponse(
                 user.getId(),
                 user.getLoginId(),
                 user.getName(),
+                user.getPhone(),
                 order.getOrderType().name(),
                 order.getStatus().name(),
                 order.getStatus().getDescription(),
