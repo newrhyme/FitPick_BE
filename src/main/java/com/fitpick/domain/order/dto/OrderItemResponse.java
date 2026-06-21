@@ -9,6 +9,9 @@ public record OrderItemResponse(
         @Schema(description = "주문 항목 ID", example = "20")
         Long orderItemId,
 
+        @Schema(description = "상품 ID — 상품 상세 화면 이동에 사용", example = "1")
+        Long clothesId,
+
         @Schema(description = "상품 옵션 ID", example = "2")
         Long clothesOptionId,
 
@@ -30,6 +33,7 @@ public record OrderItemResponse(
     public static OrderItemResponse from(OrderItem item) {
         return new OrderItemResponse(
                 item.getId(),
+                item.getClothesOption().getClothes().getId(),
                 item.getClothesOption().getId(),
                 item.getClothesOption().getClothes().getTitle(),
                 item.getClothesOption().getSize(),
