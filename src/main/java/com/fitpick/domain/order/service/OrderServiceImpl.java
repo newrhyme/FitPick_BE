@@ -88,7 +88,9 @@ public class OrderServiceImpl implements OrderService{
         Order saved = orderRepository.save(order);
 
         // 6) CART 주문 성공 → cart_items만 비우고 carts 행은 유지
-        cart.getItems().clear();   // orphanRemoval=true 라 DELETE 실행
+        // decreaseStock의 clearAutomatically=true가 cart를 detach시키므로
+        // orphanRemoval 의존 불가. bulk delete로 직접 처리.
+        cartItemRepository.deleteAllByCartId(cart.getId());
 
         return OrderResponse.from(saved);
     }
