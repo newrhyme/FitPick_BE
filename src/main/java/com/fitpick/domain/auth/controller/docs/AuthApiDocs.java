@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Auth", description = "회원가입/로그인 API")
@@ -48,5 +50,5 @@ public interface AuthApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공 — LoginIdCheckResponse 반환"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "loginId 누락 / 공백 / 50자 초과 (E000)")
     })
-    ApiResponse<?> checkLoginId(String loginId);
+    ApiResponse<?> checkLoginId(@NotBlank @Size(max = 50) String loginId);
 }
