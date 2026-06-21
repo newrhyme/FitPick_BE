@@ -2,6 +2,11 @@ spring:
   application:
     name: fitpick
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
@@ -22,3 +27,7 @@ jwt:
 
 app:
   profile-name: default
+  s3:
+    bucket: fitpick-images
+    region: ap-northeast-2
+    public-base-url: https://fitpick-images.s3.ap-northeast-2.amazonaws.com

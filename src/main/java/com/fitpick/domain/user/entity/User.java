@@ -81,4 +81,12 @@ public class User extends BaseTimeEntity {
         if (ageGroup != null) this.ageGroup = ageGroup;
         if (address != null) this.address = address;
     }
+
+    public void updateProfileImageUrl(String url) {
+        this.profileImageUrl = url;
+    }
+
+    public void updateTryOnImageUrl(String url) {
+        this.tryOnImageUrl = url;
+    }
 }

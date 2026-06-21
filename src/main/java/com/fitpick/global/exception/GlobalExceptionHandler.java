@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode, fieldErrors));
+    }
+
+    // 파일 업로드 크기 초과 → 400
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        log.warn("파일 업로드 크기 초과: {}", e.getMessage());
+        ErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
     }
 
     // 요청 본문 파싱 실패 (잘못된 JSON, 잘못된 enum 값, 타입 불일치 등) → 400

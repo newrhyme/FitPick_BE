@@ -4,9 +4,16 @@ import com.fitpick.domain.user.dto.UserUpdateRequest;
 import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "User", description = "사용자 정보 API")
 public interface UserApiDocs {
@@ -39,4 +46,58 @@ public interface UserApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음 (A005)")
     })
     ApiResponse<?> updateMyInfo(CustomUserDetails userDetails, UserUpdateRequest request);
+
+    @Operation(
+            summary = "프로필 이미지 업로드",
+            description = "마이페이지 프로필 이미지를 S3에 업로드하고 users.profile_image_url을 갱신합니다. " +
+                          "허용 형식: image/jpeg, image/png, image/webp. 최대 10MB. " +
+                          "응답은 변경된 UserMeResponse를 반환합니다.",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "object", requiredProperties = {"file"}),
+                            encoding = @Encoding(name = "file", contentType = "image/jpeg, image/png, image/webp")
+                    )
+            )
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업로드 성공 — 변경된 UserMeResponse 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "지원하지 않는 형식 (I001), 빈 파일 (I002), 또는 잘못된 요청 (E000) — 10MB 초과 포함"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음 (A005)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "S3 업로드 실패 (I003)")
+    })
+    ApiResponse<?> uploadProfileImage(
+            CustomUserDetails userDetails,
+            @Parameter(description = "업로드할 프로필 이미지 (jpeg/png/webp, 최대 10MB)") MultipartFile file
+    );
+
+    @Operation(
+            summary = "가상 착용용 전신 이미지 업로드",
+            description = "가상 피팅 기본 이미지를 S3에 업로드하고 users.try_on_image_url을 갱신합니다. " +
+                          "허용 형식: image/jpeg, image/png, image/webp. 최대 10MB. " +
+                          "응답의 hasTryOnImage가 true로 바뀝니다.",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "object", requiredProperties = {"file"}),
+                            encoding = @Encoding(name = "file", contentType = "image/jpeg, image/png, image/webp")
+                    )
+            )
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업로드 성공 — 변경된 UserMeResponse 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "지원하지 않는 형식 (I001), 빈 파일 (I002), 또는 잘못된 요청 (E000) — 10MB 초과 포함"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음 (A005)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "S3 업로드 실패 (I003)")
+    })
+    ApiResponse<?> uploadTryOnImage(
+            CustomUserDetails userDetails,
+            @Parameter(description = "업로드할 전신 이미지 (jpeg/png/webp, 최대 10MB)") MultipartFile file
+    );
 }
