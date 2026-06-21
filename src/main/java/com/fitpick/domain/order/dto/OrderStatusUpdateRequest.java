@@ -8,9 +8,10 @@ import jakarta.validation.constraints.NotNull;
 public record OrderStatusUpdateRequest(
 
         @Schema(
-                description = "변경할 주문 상태. 허용 전이: PAID→PREPARING→READY→PICKED_UP",
+                description = "변경할 주문 상태. 허용 전이: PAID→PREPARING→READY→PICKED_UP, "
+                        + "또는 PAID/PREPARING/READY → CANCELED (관리자 취소, 재고 복구 동반)",
                 example = "PREPARING",
-                allowableValues = {"PREPARING", "READY", "PICKED_UP"},
+                allowableValues = {"PREPARING", "READY", "PICKED_UP", "CANCELED"},
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         @NotNull(message = "변경할 상태는 필수입니다.")

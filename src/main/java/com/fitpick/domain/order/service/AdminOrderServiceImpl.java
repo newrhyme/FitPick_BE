@@ -1,12 +1,14 @@
 package com.fitpick.domain.order.service;
 
 import com.fitpick.domain.auth.exception.AuthErrorCode;
+import com.fitpick.domain.clothes.repository.ClothesOptionRepository;
 import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.domain.order.dto.AdminOrderDetailResponse;
 import com.fitpick.domain.order.dto.AdminOrderStatsResponse;
 import com.fitpick.domain.order.dto.AdminOrderSummaryResponse;
 import com.fitpick.domain.order.dto.OrderStatusUpdateRequest;
 import com.fitpick.domain.order.entity.Order;
+import com.fitpick.domain.order.entity.OrderItem;
 import com.fitpick.domain.order.entity.OrderStatus;
 import com.fitpick.domain.order.exception.OrderErrorCode;
 import com.fitpick.domain.order.repository.OrderRepository;
@@ -35,6 +37,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ClothesOptionRepository clothesOptionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,6 +76,11 @@ public class AdminOrderServiceImpl implements AdminOrderService {
             case PREPARING -> order.markPreparing();
             case READY     -> order.markReady();
             case PICKED_UP -> order.markPickedUp();
+            case CANCELED -> {
+                OrderStatus before = order.getStatus();
+                order.cancelByAdmin();
+                restoreStocks(order, before);
+            }
             default -> throw new CustomException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
@@ -86,6 +94,22 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         return AdminOrderDetailResponse.of(order, user);
+    }
+
+    // 관리자 취소 시 재고 복구. 차감이 있었던 상태(PAID/PREPARING/READY)에서만 복구.
+    // OrderServiceImpl.cancelOrder와 동일 패턴이지만 거긴 userId 검증과 묶여 있어 그대로 호출 불가 → 같은 패턴 사용.
+    private void restoreStocks(Order order, OrderStatus before) {
+        if (before != OrderStatus.PAID
+                && before != OrderStatus.PREPARING
+                && before != OrderStatus.READY) {
+            return;
+        }
+        for (OrderItem item : order.getItems()) {
+            clothesOptionRepository.increaseStock(
+                    item.getClothesOption().getId(),
+                    item.getQuantity()
+            );
+        }
     }
 
     @Override

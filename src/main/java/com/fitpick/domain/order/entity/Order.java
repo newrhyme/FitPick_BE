@@ -108,4 +108,15 @@ public class Order extends BaseTimeEntity {
         // 재고 복구는 서비스에서: cancel() 호출 전 status가 PAID/PREPARING이었는지 보고 결정
     }
 
+    // 관리자 취소: PAID/PREPARING/READY -> CANCELED (PICKED_UP/CANCELED 이후 불가)
+    public void cancelByAdmin() {
+        if (this.status != OrderStatus.PAID
+                && this.status != OrderStatus.PREPARING
+                && this.status != OrderStatus.READY) {
+            throw new CustomException(OrderErrorCode.INVALID_STATUS_TRANSITION);
+        }
+        this.status = OrderStatus.CANCELED;
+        // 재고 복구는 서비스에서: 호출 전 status가 PAID/PREPARING/READY이었는지 보고 결정
+    }
+
 }

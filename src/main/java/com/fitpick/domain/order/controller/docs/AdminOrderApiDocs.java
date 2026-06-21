@@ -38,7 +38,9 @@ public interface AdminOrderApiDocs {
 
     @Operation(
             summary = "관리자 주문 상태 변경",
-            description = "허용 전이: PAID→PREPARING→READY→PICKED_UP. READY로 변경 시 고객에게 픽업 준비완료 알림이 저장됩니다. (STAFF/ADMIN 전용)"
+            description = "허용 전이: PAID→PREPARING→READY→PICKED_UP. " +
+                          "CANCELED는 PAID/PREPARING/READY 상태에서만 가능(관리자 취소, 재고 자동 복구). " +
+                          "READY로 변경 시 고객에게 픽업 준비완료 알림이 저장됩니다. (STAFF/ADMIN 전용)"
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
