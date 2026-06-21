@@ -72,4 +72,13 @@ public class User extends BaseTimeEntity {
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
     }
+
+    public void updateProfile(String phone, Integer height, Integer weight,
+                              AgeGroup ageGroup, String address) {
+        if (phone != null) this.phone = phone;
+        if (height != null) this.height = height;
+        if (weight != null) this.weight = weight;
+        if (ageGroup != null) this.ageGroup = ageGroup;
+        if (address != null) this.address = address;
+    }
 }
