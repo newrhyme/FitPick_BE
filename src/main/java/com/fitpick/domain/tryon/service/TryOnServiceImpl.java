@@ -81,7 +81,9 @@ public class TryOnServiceImpl implements TryOnService {
             // 외부 호출 구간 — 트랜잭션 밖, DB 커넥션 점유 없음
             ImageInput personImage = imageDownloader.download(userImageUrl, "person.png");
             ImageInput productImage = imageDownloader.download(productImageUrl, "product.png");
-            String prompt = buildPrompt(clothes, option);
+            String englishColor = toEnglishColor(option.getColor());
+            String categoryName = clothes.getCategory() != null ? clothes.getCategory().name() : null;
+            String prompt = buildPrompt(englishColor, categoryName);
             byte[] generated = openAiImageClient.editImage(prompt, personImage, productImage);
 
             // S3 업로드 — OpenAI 성공 시에만 (실패 시 비용 회피)
@@ -176,28 +178,88 @@ public class TryOnServiceImpl implements TryOnService {
         return clothes.getThumbnailImageUrl();
     }
 
-    private String buildPrompt(Clothes clothes, ClothesOption option) {
-        return """
+    private static final Map<String, String> COLOR_KO_TO_EN = Map.ofEntries(
+            Map.entry("화이트", "white"),
+            Map.entry("블랙", "black"),
+            Map.entry("그레이", "gray"),
+            Map.entry("회색", "gray"),
+            Map.entry("네이비", "navy"),
+            Map.entry("블루", "blue"),
+            Map.entry("파랑", "blue"),
+            Map.entry("레드", "red"),
+            Map.entry("빨강", "red"),
+            Map.entry("핑크", "pink"),
+            Map.entry("분홍", "pink"),
+            Map.entry("베이지", "beige"),
+            Map.entry("브라운", "brown"),
+            Map.entry("갈색", "brown"),
+            Map.entry("카키", "khaki"),
+            Map.entry("그린", "green"),
+            Map.entry("초록", "green"),
+            Map.entry("옐로우", "yellow"),
+            Map.entry("노랑", "yellow"),
+            Map.entry("오렌지", "orange"),
+            Map.entry("주황", "orange"),
+            Map.entry("퍼플", "purple"),
+            Map.entry("보라", "purple"),
+            Map.entry("아이보리", "ivory"),
+            Map.entry("민트", "mint"),
+            Map.entry("스카이블루", "sky blue"),
+            Map.entry("와인", "wine")
+    );
+
+    private String toEnglishColor(String color) {
+        if (color == null || color.isBlank()) {
+            return null;
+        }
+        String trimmed = color.trim();
+        if (trimmed.matches("[A-Za-z ]+")) {
+            return trimmed.toLowerCase();
+        }
+        return COLOR_KO_TO_EN.get(trimmed);
+    }
+
+    private String buildPrompt(String color, String category) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
                 Create a realistic virtual try-on image for a shopping app.
+
                 Use the first image as the person's full-body reference.
                 Use the second image as the clothing or accessory product reference.
-                Dress the person in the product naturally.
-                Preserve the person's identity, face, body shape, pose, background, and lighting as much as possible.
-                Do not change the person's face or identity.
-                Do not add extra products.
-                Make the output look like a realistic product fitting preview.
-                If the product is an accessory, apply the accessory to the person naturally while preserving the original outfit.
+                Dress or equip the person with the product naturally.
 
-                Product title: %s
-                Category: %s
-                Selected color: %s
-                Selected size: %s
-                """.formatted(
-                clothes.getTitle() != null ? clothes.getTitle() : "",
-                clothes.getCategory() != null ? clothes.getCategory().name() : "",
-                option.getColor() != null ? option.getColor() : "",
-                option.getSize() != null ? option.getSize() : ""
-        );
+                CRITICAL RULES — must not violate:
+                - DO NOT add any text, labels, captions, watermarks, logos, or written characters to the output image.
+                - DO NOT overlay product information on the image.
+                - The output must be a clean photograph with no annotations.
+
+                Preservation rules:
+                - Preserve the person's identity, face, body shape, pose, background, and lighting.
+                - Do not change the person's face or identity.
+                - Do not add or remove other clothing items unless replacing the same category.
+                - If the product is an accessory (bag, hat, watch), apply it naturally while keeping the original outfit.
+
+                """);
+
+        if (category != null && !category.isBlank()) {
+            sb.append("Product category: ").append(category).append("\n\n");
+            sb.append("""
+                    Determine how to apply the product based on category:
+                    - TOP / BOTTOM / OUTER / DRESS: replace the corresponding existing garment on the person.
+                    - BAG / HAT / SCARF / WATCH / ACCESSORY: add the item naturally while preserving all existing clothing.
+                    - SHOES: replace existing footwear.
+
+                    """);
+        }
+
+        if (color != null && !color.isBlank()) {
+            sb.append("Color reference (if applicable): Use a ")
+                    .append(color)
+                    .append(" colored variant of the product.\n\n");
+        }
+
+        sb.append("The output should match a clean studio photo style consistent with the reference images.\n");
+        return sb.toString();
     }
 
     private String buildFailureReason(Exception e) {
