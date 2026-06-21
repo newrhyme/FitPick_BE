@@ -36,4 +36,17 @@ public interface AuthApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호 불일치 (A002)")
     })
     ApiResponse<?> login(@Valid @RequestBody LoginRequest loginRequest);
+
+    @Operation(
+            summary = "로그인 아이디 중복 체크",
+            description = "회원가입 화면에서 ID 입력 중 실시간 중복 검사. " +
+                          "available=true면 사용 가능, false면 이미 사용 중. " +
+                          "loginId는 1~50자 필수."
+    )
+    @SecurityRequirements
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공 — LoginIdCheckResponse 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "loginId 누락 / 공백 / 50자 초과 (E000)")
+    })
+    ApiResponse<?> checkLoginId(String loginId);
 }

@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -40,6 +42,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode, fieldErrors));
+    }
+
+    // 쿼리/패스 파라미터 검증 실패 (@Validated + @NotBlank/@Size 등) → 400
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException e) {
+        log.warn("쿼리/패스 파라미터 검증 실패: {}", e.getMessage());
+        ErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    // 필수 쿼리 파라미터 누락 → 400
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParam(MissingServletRequestParameterException e) {
+        log.warn("필수 쿼리 파라미터 누락: {}", e.getParameterName());
+        ErrorCode errorCode = GlobalErrorCode.INVALID_REQUEST;
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
     }
 
     // 파일 업로드 크기 초과 → 400

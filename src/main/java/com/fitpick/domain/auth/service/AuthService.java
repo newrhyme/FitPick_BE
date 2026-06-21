@@ -43,6 +43,11 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
+    public boolean checkLoginIdAvailable(String loginId) {
+        return !userRepository.existsByLoginId(loginId);
+    }
+
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByLoginId(request.loginId())
                 .orElseThrow(() -> new CustomException(AuthErrorCode.INVALID_CREDENTIALS));
