@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0017-extend-try-ons
+      author: fitpick
+      changes:
+        - addColumn:
+            tableName: try_ons
+            columns:
+              - column:
+                  name: product_image_url
+                  type: varchar(500)
+              - column:
+                  name: failure_reason
+                  type: varchar(500)

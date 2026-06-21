@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: changes/0016-add-try-on-image-url-to-users.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/0017-extend-try-ons.yaml
+      relativeToChangelogFile: true

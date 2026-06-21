@@ -39,4 +39,20 @@ public class S3Uploader {
             throw new CustomException(ImageErrorCode.UPLOAD_FAILED);
         }
     }
+
+    public String uploadBytes(byte[] bytes, String key, String contentType) {
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(props.bucket())
+                    .key(key)
+                    .contentType(contentType)
+                    .contentLength((long) bytes.length)
+                    .build();
+            s3Client.putObject(request, RequestBody.fromBytes(bytes));
+            return props.publicBaseUrl() + "/" + key;
+        } catch (RuntimeException e) {
+            log.error("S3 byte 업로드 실패. key={}", key, e);
+            throw new CustomException(ImageErrorCode.UPLOAD_FAILED);
+        }
+    }
 }

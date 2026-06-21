@@ -31,3 +31,10 @@ app:
     bucket: fitpick-images
     region: ap-northeast-2
     public-base-url: https://fitpick-images.s3.ap-northeast-2.amazonaws.com
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    base-url: https://api.openai.com
+    image-model: gpt-image-1
+    image-size: 1024x1536
+    image-quality: medium
+    timeout-sec: 60

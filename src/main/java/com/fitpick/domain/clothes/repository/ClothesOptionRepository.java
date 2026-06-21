@@ -6,12 +6,21 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ClothesOptionRepository extends JpaRepository<ClothesOption, Long> {
 
     // 특정 옷 옵션 전체 조회 (상세 페이지 색상, 사이즈, 재고 보여줄 때)
     List<ClothesOption> findByClothesId(Long clothesId);
+
+    // N+1 회피: 옵션 ID 모음으로 옵션 + 옷을 한 번에 fetch (가상 피팅 목록 응답용)
+    @Query("""
+            SELECT o FROM ClothesOption o
+            JOIN FETCH o.clothes
+            WHERE o.id IN :ids
+            """)
+    List<ClothesOption> findAllByIdInWithClothes(@Param("ids") Collection<Long> ids);
 
     // 재고 실제 차감 : stock >= quantity일 때만 차감
     // 영향 받은 행 수 == 1 성공
