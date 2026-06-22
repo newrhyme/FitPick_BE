@@ -41,4 +41,5 @@ src/main/resources/application-local-mysql.yml
 compose.local.yaml
 
 # 환경변수 파일 (시크릿 포함 — 커밋 금지)
-.envcompose.override.yaml
+.env
+compose.override.yaml
