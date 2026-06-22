@@ -18,6 +18,9 @@ public record OrderItemResponse(
         @Schema(description = "상품명", example = "오버핏 코튼 셔츠")
         String clothesTitle,
 
+        @Schema(description = "상품 썸네일 이미지 URL", example = "https://example.com/img/shirt_thumb.jpg")
+        String thumbnailImageUrl,
+
         @Schema(description = "사이즈", example = "M")
         String size,
 
@@ -36,6 +39,7 @@ public record OrderItemResponse(
                 item.getClothesOption().getClothes().getId(),
                 item.getClothesOption().getId(),
                 item.getClothesOption().getClothes().getTitle(),
+                item.getClothesOption().getClothes().getThumbnailImageUrl(),
                 item.getClothesOption().getSize(),
                 item.getClothesOption().getColor(),
                 item.getQuantity(),
