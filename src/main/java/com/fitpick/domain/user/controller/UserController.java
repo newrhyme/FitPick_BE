@@ -1,6 +1,7 @@
 package com.fitpick.domain.user.controller;
 
 import com.fitpick.domain.user.controller.docs.UserApiDocs;
+import com.fitpick.domain.user.dto.FcmTokenUpdateRequest;
 import com.fitpick.domain.user.dto.UserMeResponse;
 import com.fitpick.domain.user.dto.UserUpdateRequest;
 import com.fitpick.domain.user.service.UserImageService;
@@ -11,6 +12,7 @@ import com.fitpick.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -62,5 +64,14 @@ public class UserController implements UserApiDocs {
         userImageService.uploadTryOnImage(userDetails.getUserId(), file);
         UserMeResponse response = userService.getMyInfo(userDetails.getUserId());
         return ApiResponse.success(SuccessCode.UPDATE_SUCCESS, response);
+    }
+
+    @PostMapping("/me/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> updateFcmToken(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody FcmTokenUpdateRequest request
+    ) {
+        userService.updateFcmToken(userDetails.getUserId(), request.fcmToken());
+        return ResponseEntity.ok(ApiResponse.success(SuccessCode.UPDATE_SUCCESS));
     }
 }

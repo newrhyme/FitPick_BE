@@ -1,5 +1,6 @@
 package com.fitpick.domain.user.controller.docs;
 
+import com.fitpick.domain.user.dto.FcmTokenUpdateRequest;
 import com.fitpick.domain.user.dto.UserUpdateRequest;
 import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.security.CustomUserDetails;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "User", description = "사용자 정보 API")
@@ -100,4 +102,18 @@ public interface UserApiDocs {
             CustomUserDetails userDetails,
             @Parameter(description = "업로드할 전신 이미지 (jpeg/png/webp, 최대 10MB)") MultipartFile file
     );
+
+    @Operation(
+            summary = "FCM 토큰 등록/갱신",
+            description = "안드로이드 앱이 FCM SDK로 발급받은 디바이스 토큰을 users.fcm_token에 저장합니다. " +
+                          "같은 사용자가 다시 호출하면 기존 토큰을 새 토큰으로 덮어씁니다."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "등록/갱신 성공 — data는 null"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "fcmToken 누락/공백 또는 500자 초과 (E000)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음 (A005)")
+    })
+    ResponseEntity<ApiResponse<Void>> updateFcmToken(CustomUserDetails userDetails, FcmTokenUpdateRequest request);
 }

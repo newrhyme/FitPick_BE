@@ -8,4 +8,6 @@ public interface UserService {
     UserMeResponse getMyInfo(Long userId);
 
     UserMeResponse updateMyInfo(Long userId, UserUpdateRequest request);
+
+    void updateFcmToken(Long userId, String fcmToken);
 }

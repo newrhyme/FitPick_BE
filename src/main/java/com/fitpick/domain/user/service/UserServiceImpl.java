@@ -51,4 +51,12 @@ public class UserServiceImpl implements UserService {
 
         return UserMeResponse.of(user, orderCount, unreadNotificationCount);
     }
+
+    @Override
+    @Transactional
+    public void updateFcmToken(Long userId, String fcmToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
+        user.updateFcmToken(fcmToken);
+    }
 }
