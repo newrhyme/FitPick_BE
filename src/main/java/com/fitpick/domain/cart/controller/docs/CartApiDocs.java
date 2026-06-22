@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Cart", description = "장바구니 API (로그인 필수)")
 public interface CartApiDocs {
@@ -48,4 +49,11 @@ public interface CartApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "장바구니 항목 없음 (CT001)")
     })
     ApiResponse<?> removeItem(CustomUserDetails userDetails, Long cartItemId);
+
+    @Operation(summary = "장바구니 전체 비우기", description = "내 장바구니의 모든 항목을 삭제합니다. 이미 비어있어도 204를 반환합니다(멱등).")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "비우기 성공 — 본문 없음")
+    })
+    ResponseEntity<ApiResponse<Void>> clearCart(CustomUserDetails userDetails);
 }

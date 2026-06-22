@@ -121,6 +121,14 @@ public class CartServiceImpl implements CartService {
         return getMyCart(userId);
     }
 
+    @Override
+    @Transactional
+    public void clearCart(Long userId) {
+        // 장바구니 없으면 이미 비어있는 상태와 동등 — 멱등 처리
+        cartRepository.findByUserIdAndStoreId(userId, DEFAULT_STORE_ID)
+                .ifPresent(cart -> cartItemRepository.deleteAllByCartId(cart.getId()));
+    }
+
     // 항목이 현재 사용자의 장바구니 것인지 검증
     private void validateOwner(CartItem item, Long userId) {
         if (!item.getCart().getUserId().equals(userId)) {

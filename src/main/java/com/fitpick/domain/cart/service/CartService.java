@@ -17,4 +17,7 @@ public interface CartService {
 
     // 삭제
     CartResponse removeItem(Long userId, Long cartItemId);
+
+    // 전체 비우기
+    void clearCart(Long userId);
 }

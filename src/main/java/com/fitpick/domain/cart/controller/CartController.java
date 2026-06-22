@@ -10,6 +10,8 @@ import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,5 +56,14 @@ public class CartController implements CartApiDocs {
     ) {
         CartResponse response = cartService.removeItem(userDetails.getUserId(), cartItemId);
         return ApiResponse.success(SuccessCode.OK, response);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Void>> clearCart(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        cartService.clearCart(userDetails.getUserId());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .body(ApiResponse.success(SuccessCode.DELETED));
     }
 }
