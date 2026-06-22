@@ -22,8 +22,11 @@ databaseChangeLog:
                     foreignKeyName: fk_nfc_tags_option
                     references: clothes_options(id)
 
-  # 2) clothes_id에 걸린 UNIQUE 제약(uq_nfc_tags_clothes) 해제.
-  #    옵션별로 같은 clothes를 가리키는 태그가 다수 필요하기 때문.
+  # 2) clothes_id의 UNIQUE 제약 해제 — 옵션별로 같은 clothes를 가리키는 태그가 다수 필요.
+  #    주의: nfc_tags.clothes_id에는 FK(fk_nfc_tags_clothes)가 걸려 있고,
+  #         MySQL은 FK가 의존하는 인덱스를 단독으로 못 지움.
+  #         → DROP UNIQUE INDEX + ADD 일반 INDEX 를 한 ALTER로 atomic하게 처리해
+  #           FK 지지 인덱스를 일반 인덱스로 갈아끼움.
   - changeSet:
       id: 0018-drop-unique-constraint-on-nfc-tags-clothes
       author: fitpick
@@ -33,9 +36,8 @@ databaseChangeLog:
             expectedResult: 1
             sql: SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'nfc_tags' AND constraint_name = 'uq_nfc_tags_clothes' AND constraint_type = 'UNIQUE'
       changes:
-        - dropUniqueConstraint:
-            tableName: nfc_tags
-            constraintName: uq_nfc_tags_clothes
+        - sql:
+            sql: ALTER TABLE nfc_tags DROP INDEX uq_nfc_tags_clothes, ADD INDEX idx_nfc_tags_clothes (clothes_id)
 
   # 3) 옵션 단위 NFC 태그 시드 (옵션 41~60 → tag_uid 04A1B2C341~360).
   #    INSERT IGNORE로 이중 안전망: (a) tag_uid UNIQUE 중복 시 skip, (b) 옵션이 없는 환경에서는 SELECT가 0행 → 삽입 없음.
