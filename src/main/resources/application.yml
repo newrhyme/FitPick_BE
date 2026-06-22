@@ -38,3 +38,6 @@ app:
     image-size: 1024x1536
     image-quality: medium
     timeout-sec: 60
+  firebase:
+    credentials-path: ${FIREBASE_CREDENTIALS_PATH:./firebase-key.json}
+    enabled: ${FIREBASE_ENABLED:true}

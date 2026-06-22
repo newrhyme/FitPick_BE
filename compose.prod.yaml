@@ -40,6 +40,11 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TOKEN_EXPIRATION_MS: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      FIREBASE_CREDENTIALS_PATH: /app/firebase-key.json
+      FIREBASE_ENABLED: ${FIREBASE_ENABLED:-true}
+    volumes:
+      # 호스트 ~/FitPick_BE/firebase-key.json → 컨테이너 /app/firebase-key.json (read-only)
+      - ./firebase-key.json:/app/firebase-key.json:ro
 
 volumes:
   mysql-data:

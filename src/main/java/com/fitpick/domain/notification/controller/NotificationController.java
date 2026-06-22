@@ -1,18 +1,23 @@
 package com.fitpick.domain.notification.controller;
 
 import com.fitpick.domain.notification.controller.docs.NotificationDocs;
+import com.fitpick.domain.notification.dto.FcmTestRequest;
 import com.fitpick.domain.notification.dto.NotificationResponse;
 import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.global.common.code.SuccessCode;
 import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.common.response.PageResponse;
+import com.fitpick.global.infra.firebase.FcmService.FcmSendResult;
 import com.fitpick.global.security.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,5 +36,15 @@ public class NotificationController implements NotificationDocs {
         PageResponse<NotificationResponse> response =
                 notificationService.getMyNotifications(userDetails.getUserId(), pageable);
         return ApiResponse.success(SuccessCode.READ_SUCCESS, response);
+    }
+
+    // [TEMP] FCM 3단계 통합 검증용 — 시연 전 제거 예정.
+    @PostMapping("/test-fcm")
+    public ApiResponse<?> testFcm(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody FcmTestRequest request
+    ) {
+        FcmSendResult result = notificationService.sendTestFcm(userDetails.getUserId(), request);
+        return ApiResponse.success(SuccessCode.OK, result);
     }
 }
