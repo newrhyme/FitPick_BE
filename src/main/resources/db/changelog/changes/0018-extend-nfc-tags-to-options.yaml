@@ -1,0 +1,70 @@
+databaseChangeLog:
+
+  # 1) nfc_tags에 clothes_option_id 컬럼 추가 (nullable, FK to clothes_options).
+  #    NULL이면 기존 옷 단위 태그(레거시/폴백). NOT NULL이면 옵션 단위 태그.
+  - changeSet:
+      id: 0018-add-clothes-option-id-to-nfc-tags
+      author: fitpick
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'nfc_tags' AND column_name = 'clothes_option_id'
+      changes:
+        - addColumn:
+            tableName: nfc_tags
+            columns:
+              - column:
+                  name: clothes_option_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_nfc_tags_option
+                    references: clothes_options(id)
+
+  # 2) clothes_id에 걸린 UNIQUE 제약(uq_nfc_tags_clothes) 해제.
+  #    옵션별로 같은 clothes를 가리키는 태그가 다수 필요하기 때문.
+  - changeSet:
+      id: 0018-drop-unique-constraint-on-nfc-tags-clothes
+      author: fitpick
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 1
+            sql: SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'nfc_tags' AND constraint_name = 'uq_nfc_tags_clothes' AND constraint_type = 'UNIQUE'
+      changes:
+        - dropUniqueConstraint:
+            tableName: nfc_tags
+            constraintName: uq_nfc_tags_clothes
+
+  # 3) 옵션 단위 NFC 태그 시드 (옵션 41~60 → tag_uid 04A1B2C341~360).
+  #    INSERT IGNORE로 이중 안전망: (a) tag_uid UNIQUE 중복 시 skip, (b) 옵션이 없는 환경에서는 SELECT가 0행 → 삽입 없음.
+  #    Liquibase 자체 changeset 추적과 합쳐 멱등.
+  - changeSet:
+      id: 0018-seed-option-level-nfc-tags
+      author: fitpick
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C341', 1, NOW(), NOW() FROM clothes_options WHERE id = 41;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C342', 1, NOW(), NOW() FROM clothes_options WHERE id = 42;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C343', 1, NOW(), NOW() FROM clothes_options WHERE id = 43;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C344', 1, NOW(), NOW() FROM clothes_options WHERE id = 44;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C345', 1, NOW(), NOW() FROM clothes_options WHERE id = 45;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C346', 1, NOW(), NOW() FROM clothes_options WHERE id = 46;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C347', 1, NOW(), NOW() FROM clothes_options WHERE id = 47;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C348', 1, NOW(), NOW() FROM clothes_options WHERE id = 48;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C349', 1, NOW(), NOW() FROM clothes_options WHERE id = 49;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C350', 1, NOW(), NOW() FROM clothes_options WHERE id = 50;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C351', 1, NOW(), NOW() FROM clothes_options WHERE id = 51;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C352', 1, NOW(), NOW() FROM clothes_options WHERE id = 52;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C353', 1, NOW(), NOW() FROM clothes_options WHERE id = 53;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C354', 1, NOW(), NOW() FROM clothes_options WHERE id = 54;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C355', 1, NOW(), NOW() FROM clothes_options WHERE id = 55;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C356', 1, NOW(), NOW() FROM clothes_options WHERE id = 56;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C357', 1, NOW(), NOW() FROM clothes_options WHERE id = 57;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C358', 1, NOW(), NOW() FROM clothes_options WHERE id = 58;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C359', 1, NOW(), NOW() FROM clothes_options WHERE id = 59;
+              INSERT IGNORE INTO nfc_tags (clothes_id, clothes_option_id, tag_uid, is_active, created_at, updated_at) SELECT clothes_id, id, '04A1B2C360', 1, NOW(), NOW() FROM clothes_options WHERE id = 60;

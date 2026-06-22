@@ -1,7 +1,7 @@
 package com.fitpick.domain.nfc.controller;
 
-import com.fitpick.domain.clothes.dto.ClothesDetailResponse;
 import com.fitpick.domain.nfc.controller.docs.NfcApiDocs;
+import com.fitpick.domain.nfc.dto.NfcTagResponse;
 import com.fitpick.domain.nfc.service.NfcService;
 import com.fitpick.global.common.code.SuccessCode;
 import com.fitpick.global.common.response.ApiResponse;
@@ -29,7 +29,7 @@ public class NfcController implements NfcApiDocs {
     ) {
         Long userId = (userDetails != null) ? userDetails.getUserId() : null;
         log.info("NFC 조회 userId = {}", userId);
-        ClothesDetailResponse response = nfcService.getClothesByTagUid(tagUid, userId);
+        NfcTagResponse response = nfcService.getClothesByTagUid(tagUid, userId);
         return ApiResponse.success(SuccessCode.READ_SUCCESS, response);
     }
 }

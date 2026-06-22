@@ -1,7 +1,7 @@
 package com.fitpick.domain.nfc.service;
 
-import com.fitpick.domain.clothes.dto.ClothesDetailResponse;
+import com.fitpick.domain.nfc.dto.NfcTagResponse;
 
 public interface NfcService {
-    ClothesDetailResponse getClothesByTagUid(String tagUid, Long userId);
+    NfcTagResponse getClothesByTagUid(String tagUid, Long userId);
 }

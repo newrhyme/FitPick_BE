@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: changes/0017-extend-try-ons.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/0018-extend-nfc-tags-to-options.yaml
+      relativeToChangelogFile: true
