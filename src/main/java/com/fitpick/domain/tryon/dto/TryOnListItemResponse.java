@@ -19,6 +19,12 @@ public record TryOnListItemResponse(
         @Schema(description = "상품 옵션 ID", example = "41")
         Long clothesOptionId,
 
+        @Schema(description = "사이즈", example = "L")
+        String size,
+
+        @Schema(description = "색상", example = "네이비")
+        String color,
+
         @Schema(description = "처리 상태", example = "DONE")
         String status,
 

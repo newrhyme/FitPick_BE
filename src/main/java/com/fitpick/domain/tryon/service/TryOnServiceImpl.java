@@ -92,7 +92,7 @@ public class TryOnServiceImpl implements TryOnService {
 
             // DONE 저장 — REQUIRES_NEW
             TryOn done = persistenceService.markDone(tryOnId, generatedUrl);
-            return TryOnResponse.of(done, clothes.getId(), option.getId());
+            return TryOnResponse.of(done, clothes.getId(), option.getId(), option.getSize(), option.getColor());
 
         } catch (Exception e) {
             log.error("가상 피팅 생성 실패. tryOnId={}, userId={}", tryOnId, userId, e);
@@ -116,12 +116,13 @@ public class TryOnServiceImpl implements TryOnService {
         }
 
         Long clothesOptionId = firstClothesOptionId(tryOn);
-        Long clothesId = clothesOptionId == null
+        ClothesOption opt = clothesOptionId == null
                 ? null
-                : clothesOptionRepository.findById(clothesOptionId)
-                        .map(o -> o.getClothes().getId())
-                        .orElse(null);
-        return TryOnResponse.of(tryOn, clothesId, clothesOptionId);
+                : clothesOptionRepository.findById(clothesOptionId).orElse(null);
+        Long clothesId = opt != null ? opt.getClothes().getId() : null;
+        String size = opt != null ? opt.getSize() : null;
+        String color = opt != null ? opt.getColor() : null;
+        return TryOnResponse.of(tryOn, clothesId, clothesOptionId, size, color);
     }
 
     @Override
@@ -156,6 +157,8 @@ public class TryOnServiceImpl implements TryOnService {
                     c != null ? c.getId() : null,
                     c != null ? c.getTitle() : null,
                     optId,
+                    opt != null ? opt.getSize() : null,
+                    opt != null ? opt.getColor() : null,
                     t.getStatus().name(),
                     t.getOriginalImageUrl(),
                     t.getProductImageUrl(),

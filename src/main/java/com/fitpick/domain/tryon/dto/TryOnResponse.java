@@ -17,6 +17,12 @@ public record TryOnResponse(
         @Schema(description = "상품 옵션 ID", example = "41")
         Long clothesOptionId,
 
+        @Schema(description = "사이즈", example = "L")
+        String size,
+
+        @Schema(description = "색상", example = "네이비")
+        String color,
+
         @Schema(description = "처리 상태 (PENDING/PROCESSING/DONE/FAILED)", example = "DONE")
         String status,
 
@@ -32,11 +38,13 @@ public record TryOnResponse(
         @Schema(description = "요청 생성 시각", example = "2026-06-22T15:30:00")
         LocalDateTime createdAt
 ) {
-    public static TryOnResponse of(TryOn t, Long clothesId, Long clothesOptionId) {
+    public static TryOnResponse of(TryOn t, Long clothesId, Long clothesOptionId, String size, String color) {
         return new TryOnResponse(
                 t.getId(),
                 clothesId,
                 clothesOptionId,
+                size,
+                color,
                 t.getStatus().name(),
                 t.getOriginalImageUrl(),
                 t.getProductImageUrl(),
