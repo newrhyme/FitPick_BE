@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import random
 import re
 import subprocess
 import sys
@@ -53,6 +54,7 @@ DEFAULT_STORE_ID = 1
 DEFAULT_STOCK = 10
 DETAIL_IMAGE_COUNT = 3            # 썸네일 1 + 상세 3 = 총 4행 (명세 "3~4행" 충족)
 RATE_LIMIT_SEC = 1.0
+EXPAND_STOCK_ZERO_RATIO = 0.15    # expand-options: 15% 확률로 품절(0), 나머지 1~10
 
 API_URL_FMT = (
     "https://www.uniqlo.com/kr/api/commerce/v5/ko/products/"
@@ -413,12 +415,139 @@ def load_inserted_codes() -> set[str]:
     return out
 
 
+def load_inserted_id_map() -> dict[str, int]:
+    """productCode → clothes_id (expand-options 모드용)."""
+    out: dict[str, int] = {}
+    if not INSERTED_IDS_PATH.exists():
+        return out
+    for ln in INSERTED_IDS_PATH.read_text(encoding="utf-8").splitlines():
+        ln = ln.strip()
+        if not ln or ln.startswith("#"):
+            continue
+        parts = ln.split()
+        if len(parts) >= 2 and parts[1].isdigit():
+            out[parts[0]] = int(parts[1])
+    return out
+
+
 def append_inserted(product_code: str, clothes_id: int) -> None:
     if not INSERTED_IDS_PATH.exists():
         INSERTED_IDS_PATH.write_text(_INSERTED_HEADER, encoding="utf-8")
     ts = dt.datetime.now().isoformat(timespec="seconds")
     with INSERTED_IDS_PATH.open("a", encoding="utf-8") as f:
         f.write(f"{product_code} {clothes_id} {ts}\n")
+
+
+# ── expand-options 모드 ─────────────────────────────────────────────────────
+
+def random_stock() -> int:
+    """15% 품절(0), 나머지는 1~10 균등."""
+    if random.random() < EXPAND_STOCK_ZERO_RATIO:
+        return 0
+    return random.randint(1, 10)
+
+
+def fetch_existing_options(cid: int, env: dict[str, str]) -> set[tuple[str, str]]:
+    """clothes_id의 (size, color) 조합 set 반환. 중복 INSERT 회피용."""
+    sql = (
+        f"SELECT IFNULL(size,''), IFNULL(color,'') "
+        f"FROM clothes_options WHERE clothes_id = {cid};"
+    )
+    rc, out, err = docker_mysql_run(env, sql)
+    if rc != 0:
+        raise RuntimeError(f"기존 옵션 조회 실패 (cid={cid}): {err.strip()}")
+    existing: set[tuple[str, str]] = set()
+    lines = [ln for ln in out.splitlines() if ln.strip()]
+    # 첫 줄은 헤더 — batch 모드 stdin pipe 출력
+    for ln in lines[1:]:
+        parts = ln.split("\t")
+        if len(parts) >= 2:
+            existing.add((parts[0], parts[1]))
+    return existing
+
+
+def insert_options_batch(
+    cid: int,
+    rows: list[tuple[str, str, int]],
+    env: dict[str, str],
+) -> None:
+    """옵션 여러 개를 한 트랜잭션으로 INSERT."""
+    if not rows:
+        return
+    stmts = ["START TRANSACTION;"]
+    for size_name, color_value, stock in rows:
+        stmts.append(
+            "INSERT INTO clothes_options (clothes_id, size, color, stock_quantity) "
+            f"VALUES ({cid}, {sql_quote(size_name)}, {sql_quote(color_value)}, {stock});"
+        )
+    stmts.append("COMMIT;")
+    sql = "\n".join(stmts) + "\n"
+    rc, out, err = docker_mysql_run(env, sql)
+    if rc != 0:
+        raise RuntimeError(f"옵션 batch INSERT 실패 (cid={cid}): {err.strip()}")
+
+
+def run_expand_options(specs: list[ProductSpec], env: dict[str, str]) -> int:
+    """등록된 옷에 응답의 모든 (color × size) 조합을 옵션으로 추가. 중복 skip."""
+    code_to_cid = load_inserted_id_map()
+    if not code_to_cid:
+        die(f"{INSERTED_IDS_PATH} 없음/비어있음. 먼저 정상 시드 실행 필요.")
+
+    total_new = total_skip = 0
+    fallback_colors: set[str] = set()
+    failures: list[tuple[str, str]] = []
+
+    for i, spec in enumerate(specs, start=1):
+        cid = code_to_cid.get(spec.code)
+        log(f"\n[{i}/{len(specs)}] {spec.code}  clothes_id={cid}")
+        if cid is None:
+            log("  ⚠ inserted_ids.txt에 없음 → skip")
+            continue
+        try:
+            raw = fetch_product(spec.code)
+            all_colors = raw.get("colors", [])
+            all_sizes = raw.get("sizes", [])
+            existing = fetch_existing_options(cid, env)
+
+            new_rows: list[tuple[str, str, int]] = []
+            color_summary: list[str] = []
+            for c in all_colors:
+                en = c.get("name") or ""
+                color_ko, en_norm, fallback = map_color(en)
+                if fallback:
+                    fallback_colors.add(en_norm)
+                color_summary.append(f"{color_ko}{'*' if fallback else ''}")
+                for s in all_sizes:
+                    size_name = s.get("name") or ""
+                    if not size_name:
+                        continue
+                    key = (size_name, color_ko)
+                    if key in existing:
+                        continue
+                    new_rows.append((size_name, color_ko, random_stock()))
+
+            insert_options_batch(cid, new_rows, env)
+            log(f"  colors: {len(all_colors)} [{', '.join(color_summary)}]  "
+                f"(* = 영문 fallback)")
+            log(f"  sizes:  {len(all_sizes)} [{', '.join(s.get('name','') for s in all_sizes)}]")
+            log(f"  옵션: 신규 +{len(new_rows)}, skip {len(existing)} (기존)")
+            total_new += len(new_rows)
+            total_skip += len(existing)
+        except Exception as e:
+            log(f"  ✗ FAIL: {e}")
+            failures.append((spec.code, str(e)))
+        time.sleep(RATE_LIMIT_SEC)
+
+    log("\n" + "=" * 60)
+    log(f"  신규 옵션: {total_new}, 기존 skip: {total_skip}, 실패: {len(failures)}")
+    if fallback_colors:
+        log(f"  영문 fallback 색상: {sorted(fallback_colors)}")
+    if failures:
+        log("  실패 상세:")
+        for code, msg in failures:
+            log(f"    - {code}: {msg}")
+    log("=" * 60)
+    return 0 if not failures else 2
 
 
 # ── 메인 흐름 ────────────────────────────────────────────────────────────────
@@ -512,6 +641,8 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true",
                         help="API만 호출. S3/DB 건드리지 않음.")
+    parser.add_argument("--expand-options", action="store_true",
+                        help="등록된 옷에 응답의 모든 color×size 조합을 옵션으로 추가 (중복 skip, idempotent)")
     parser.add_argument("only_codes", nargs="*",
                         help="특정 productCode만 처리 (예: E482502 E489137)")
     args = parser.parse_args()
@@ -534,6 +665,9 @@ def main() -> int:
     for k in ("MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DATABASE"):
         if not env.get(k):
             die(f".env에 {k} 없음")
+
+    if args.expand_options:
+        return run_expand_options(specs, env)
     return run_full(specs, env)
 
 
