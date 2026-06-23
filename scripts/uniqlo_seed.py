@@ -322,6 +322,7 @@ def docker_mysql_run(env: dict[str, str], sql: str) -> tuple[int, str, str]:
     cmd = [
         "docker", "exec", "-i", DOCKER_MYSQL_CONTAINER,
         "mysql",
+        "--default-character-set=utf8mb4",   # stdin UTF-8 바이트 보존 (mojibake 방지)
         "-u", env["MYSQL_USER"],
         "-p" + env["MYSQL_PASSWORD"],
         env["MYSQL_DATABASE"],
