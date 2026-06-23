@@ -84,10 +84,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
             default -> throw new CustomException(OrderErrorCode.INVALID_STATUS_TRANSITION);
         }
 
-        // READY로 바뀌면 픽업 준비완료 알림 저장
-        if (request.status() == OrderStatus.READY) {
-            notificationService.notifyPickupReady(order);
-        }
+        // 상태 전이 성공 → 코멘트로 알림 저장 + FCM 발송 (모든 전이 공통)
+        notificationService.notifyOrderStatusChange(order, request.comment());
 
         // 주문자 정보 합쳐 상세 응답
         User user = userRepository.findById(order.getUserId())

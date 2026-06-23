@@ -34,20 +34,28 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void notifyPickupReady(Order order) {
-        NotificationType type = NotificationType.PICKUP_READY;
+    public Notification notifyOrderStatusChange(Order order, String comment) {
+        // 1) Notification DB 저장 — title은 "#{orderId}", body는 관리자가 입력한 코멘트.
+        // 시연용으로 type은 PICKUP_READY 차용 (추후 상태별 분기 필요시 enum 확장).
+        Notification saved = notificationRepository.save(Notification.create(
+                order.getUserId(),
+                order.getId(),
+                "#" + order.getId(),
+                comment,
+                NotificationType.PICKUP_READY
+        ));
 
-        Notification notification = Notification.create(
-                order.getUserId(),      // 알림 받을 사람 = 주문자
-                order.getId(),          // 주문 연관 (order_id 채움)
-                type.getTitle(),
-                type.getBody(),
-                type
-        );
+        // 2) FCM 발송 — 토큰 없거나 FCM 비활성이어도 FcmService가 알아서 skip (예외 던지지 않음).
+        User user = userRepository.findById(order.getUserId()).orElse(null);
+        String token = (user != null) ? user.getFcmToken() : null;
 
-        notificationRepository.save(notification);
+        Map<String, String> data = new HashMap<>();
+        data.put("orderId", String.valueOf(order.getId()));
+        data.put("notificationId", String.valueOf(saved.getId()));
 
-        // FCM 실제 발송은 후순위 — 나중에 여기서 fcmSender.send(...) 호출
+        fcmService.send(token, "#" + order.getId(), comment, data);
+
+        return saved;
     }
 
     @Override

@@ -9,8 +9,10 @@ import org.springframework.data.domain.Pageable;
 
 public interface NotificationService {
 
-    // 주문 READY -> 픽업 준비완료 알림 저장 (1차는 DB 저장만하고 FCM은 나중에)
-    void notifyPickupReady(Order order);
+    // 주문 상태 변경 시 알림 생성 + FCM 발송.
+    // title = "#{orderId}", body = comment, data = { orderId, notificationId } (모두 string).
+    // FCM 토큰 없는 사용자도 알림 DB 저장은 그대로 진행 (FCM만 skip).
+    com.fitpick.domain.notification.entity.Notification notifyOrderStatusChange(Order order, String comment);
 
     // (추가) 내 알림 목록 조회 — 읽지 않은(isRead=false) 알림만 반환
     PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable);
