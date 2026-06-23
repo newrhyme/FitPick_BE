@@ -6,6 +6,7 @@ import com.fitpick.domain.notification.dto.NotificationResponse;
 import com.fitpick.domain.notification.dto.TestFcmResponse;
 import com.fitpick.domain.notification.entity.Notification;
 import com.fitpick.domain.notification.entity.NotificationType;
+import com.fitpick.domain.notification.exception.NotificationErrorCode;
 import com.fitpick.domain.notification.repository.NotificationRepository;
 import com.fitpick.domain.order.entity.Order;
 import com.fitpick.domain.user.entity.User;
@@ -55,6 +56,19 @@ public class NotificationServiceImpl implements NotificationService {
         Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
         Page<NotificationResponse> mapped = notifications.map(NotificationResponse::from);
         return PageResponse.from(mapped);
+    }
+
+    @Override
+    @Transactional
+    public NotificationResponse markAsRead(Long userId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new CustomException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+        if (!notification.getUserId().equals(userId)) {
+            throw new CustomException(NotificationErrorCode.NOTIFICATION_ACCESS_DENIED);
+        }
+        // idempotent — 이미 read=true여도 markAsRead는 그대로 true 유지
+        notification.markAsRead();
+        return NotificationResponse.from(notification);
     }
 
     @Override

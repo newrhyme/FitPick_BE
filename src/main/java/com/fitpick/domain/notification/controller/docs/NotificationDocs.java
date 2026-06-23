@@ -24,6 +24,20 @@ public interface NotificationDocs {
     ApiResponse<?> getMyNotifications(CustomUserDetails userDetails, @ParameterObject Pageable pageable);
 
     @Operation(
+            summary = "알림 읽음 처리",
+            description = "본인 알림만 읽음 처리 가능. 이미 읽음 상태여도 200 (idempotent). " +
+                          "응답으로 갱신된 NotificationResponse를 반환합니다."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "처리 성공 — NotificationResponse 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 알림 아님 (NT002)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "알림 없음 (NT001)")
+    })
+    ApiResponse<?> markAsRead(CustomUserDetails userDetails, Long notificationId);
+
+    @Operation(
             summary = "[TEMP] FCM 테스트 발송 (notification + optional data payload)",
             description = "본인의 users.fcm_token으로 즉시 테스트 푸시를 발송하고, 동시에 notifications 테이블에 알림을 저장합니다 " +
                           "(이후 클라이언트가 read 처리할 수 있도록). " +

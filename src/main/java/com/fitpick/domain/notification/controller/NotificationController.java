@@ -16,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +38,15 @@ public class NotificationController implements NotificationDocs {
         PageResponse<NotificationResponse> response =
                 notificationService.getMyNotifications(userDetails.getUserId(), pageable);
         return ApiResponse.success(SuccessCode.READ_SUCCESS, response);
+    }
+
+    @PatchMapping("/{notificationId}/read")
+    public ApiResponse<?> markAsRead(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long notificationId
+    ) {
+        NotificationResponse response = notificationService.markAsRead(userDetails.getUserId(), notificationId);
+        return ApiResponse.success(SuccessCode.OK, response);
     }
 
     // [TEMP] FCM 3단계 통합 검증용 — 시연 전 제거 예정.
