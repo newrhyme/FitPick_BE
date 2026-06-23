@@ -78,6 +78,7 @@ COLOR_KO: dict[str, str] = {
     "PINK": "핑크", "YELLOW": "옐로우", "GREEN": "그린",
     "BEIGE": "베이지", "BROWN": "브라운", "KHAKI": "카키",
     "ORANGE": "오렌지", "PURPLE": "퍼플", "OLIVE": "올리브",
+    "WINE": "와인", "OFF WHITE": "오프화이트",
 }
 
 
@@ -92,12 +93,12 @@ class ProductSpec:
 
 
 PRODUCTS: list[ProductSpec] = [
-    ProductSpec("E482502", [("26", "005")],                "TOP"),     # 셔츠
+    ProductSpec("E482502", [("69", "005")],                "TOP"),     # 셔츠 (원래 26 단종 → 69 NAVY로 대체)
     ProductSpec("E489137", [("13", "005")],                "TOP"),
     ProductSpec("E482480", [("69", "005")],                "TOP"),
     ProductSpec("E475367", [("18", "004")],                "TOP"),     # 티셔츠
     ProductSpec("E485567", [("01", "004")],                "TOP"),
-    ProductSpec("E488088", [("01", "004"), ("00", "004")], "TOP"),
+    ProductSpec("E488088", [("00", "004")],                "TOP"),     # 원래 (01,004) 단종 → (00,004) 단일
     ProductSpec("E485711", [("69", "004")],                "TOP"),
     ProductSpec("E484209", [("66", "004")],                "BOTTOM"),  # 바지
     ProductSpec("E482883", [("35", "004")],                "BOTTOM"),
