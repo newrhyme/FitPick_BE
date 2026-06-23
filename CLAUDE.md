@@ -16,13 +16,13 @@ CUSTOMER Flow
 
 Login
 → Home / Product List
-→ NFC Tagging
+→ NFC Tagging (option-level)
 → Product Detail
 → Option Selection
 → Cart or Direct Purchase
 → Mock Payment
 → Order Created
-→ Notification Check
+→ Notification Check (in-app + FCM push)
 → In-store Pickup
 
 STAFF Flow
@@ -34,6 +34,12 @@ Login
 → Update Order Status
 → Create Customer Notification
 → Mark Order as Picked Up
+
+Optional CUSTOMER flow:
+
+My Page → Profile Image Upload
+My Page → Try-On Image Upload
+AI Virtual Try-On (OpenAI gpt-image-1)
 
 ⸻
 
@@ -48,6 +54,9 @@ Login
 * Swagger / springdoc-openapi
 * Docker / Docker Compose
 * AWS EC2 deployment
+* AWS S3 (profile / try-on image upload)
+* OpenAI gpt-image-1 (AI virtual try-on)
+* Firebase Admin SDK (FCM push)
 
 ⸻
 
@@ -59,7 +68,7 @@ com.fitpick
 
 The project follows a domain-oriented layered architecture.
 
-Expected domains:
+Current domains:
 
 domain/auth
 domain/user
@@ -69,9 +78,17 @@ domain/order
 domain/notification
 domain/nfc
 domain/viewhistory
+domain/tryon
+domain/health
+domain/sample
 global/common
 global/exception
 global/security
+global/config
+global/logging
+global/infra/s3
+global/infra/openai
+global/infra/firebase
 
 Services generally follow the interface + implementation pattern.
 
@@ -124,6 +141,7 @@ cart
 orders
 profileImageUrl
 tryOnImageUrl
+fcmToken
 
 User information should be returned in the response body, not inside the JWT.
 
@@ -141,11 +159,17 @@ Completed:
 
 * Signup
 * Login
+* Login ID duplicate check (GET /api/v1/auth/check-login-id)
 * JWT issuance
 * Login response includes user information
 * AgeGroup enum applied
 * GET /api/v1/users/me
+* PATCH /api/v1/users/me (profile update)
+* POST /api/v1/users/me/profile-image (multipart, S3)
+* POST /api/v1/users/me/try-on-image (multipart, S3)
+* POST /api/v1/users/me/fcm-token (FCM token register / refresh)
 * users.try_on_image_url column added
+* users.fcm_token column added
 * My Page user summary response
 
 AgeGroup values:
@@ -172,6 +196,26 @@ hasTryOnImage
 orderCount
 unreadNotificationCount
 
+PATCH /api/v1/users/me editable fields:
+
+name
+phone
+height
+weight
+ageGroup
+address
+
+PATCH /api/v1/users/me does NOT update these fields:
+
+loginId
+role
+password
+profileImageUrl
+tryOnImageUrl
+fcmToken
+
+Image / FCM token mutations use dedicated endpoints above.
+
 ⸻
 
 Clothes / NFC
@@ -184,6 +228,7 @@ Completed:
 * Product options
 * Product images
 * View history recording
+* NFC tags extended to option-level (clothes_option_id, nullable for legacy fallback)
 
 NFC test tag UIDs:
 
@@ -195,6 +240,12 @@ NFC test tag UIDs:
 04A1B2C309
 04A1B2C310
 
+NFC lookup endpoint:
+
+GET /api/v1/clothes/nfc/{tagUid}
+
+If nfc_tags.clothes_option_id is NULL the tag is treated as a legacy clothes-level tag.
+
 ⸻
 
 Cart
@@ -205,6 +256,7 @@ Completed:
 * Add item to cart
 * Update item quantity
 * Delete cart item
+* Clear entire cart (DELETE /api/v1/cart)
 * Merge quantity when the same option is added again
 * Prevent adding quantity over available stock
 
@@ -219,19 +271,27 @@ Completed:
 * Mock payment
 * Stock decrease when an order is created
 * Stock restore when an order is canceled
+* Cart cleanup after cart-based order
 * Order list
 * Order detail
+* Customer order cancel
+* OrderItem response includes clothesId (for navigating to product detail)
+* OrderItem response includes thumbnailImageUrl
 
 Customer order APIs:
 
-GET /api/v1/order
-GET /api/v1/order/{orderId}
-PATCH /api/v1/order/{orderId}/cancel
+POST /api/v1/order/cart
+POST /api/v1/order/direct
+GET  /api/v1/order
+GET  /api/v1/order/{orderId}
+POST /api/v1/order/{orderId}/cancel
 
 Important:
 
 GET /api/v1/order/me does not exist.
 Use GET /api/v1/order for the customer's order list.
+
+Cancel endpoint is POST (not PATCH).
 
 Order statuses:
 
@@ -249,8 +309,9 @@ Completed:
 
 * STAFF-only admin APIs
 * Admin order list
-* Admin order detail
+* Admin order detail (includes customer name and phone)
 * Admin order status update
+* Admin order cancel
 * Admin home order summary
 * CUSTOMER access to /api/v1/admin/** is blocked
 
@@ -261,6 +322,7 @@ PREPARING -> READY
 READY -> PICKED_UP
 
 When an order is changed to READY, a PICKUP_READY notification is created for the customer.
+At this point an FCM push may be sent if the user has a registered fcm_token (see FCM section below).
 
 ⸻
 
@@ -269,12 +331,47 @@ Notification
 Completed:
 
 * Notification persistence
-* Customer notification list
+* Customer notification list (GET /api/v1/notifications)
 * PICKUP_READY notification creation when an order becomes READY
+* FCM token persistence (users.fcm_token)
+* FCM test send API (POST /api/v1/notifications/test-fcm) — TEMP, to be removed before demo
+* Firebase Admin SDK integrated (FcmService)
 
-FCM push notification has not been implemented yet.
+Status:
 
-The current notification feature is in-app notification through the notifications table.
+In-app notifications via the notifications table are fully wired end-to-end.
+FCM real-send wiring on the READY transition is integrated through FcmService.
+The /test-fcm endpoint is a temporary 3-step integration check and should be removed before the final demo.
+
+⸻
+
+Try-On (AI Virtual Try-On)
+
+Completed:
+
+* try_ons table + status flow (PENDING / PROCESSING / DONE / FAILED)
+* POST /api/v1/try-ons (create try-on request)
+* GET  /api/v1/try-ons/{tryOnId}
+* GET  /api/v1/try-ons (my list)
+* OpenAI gpt-image-1 integration (OpenAiImageClient)
+* Prompt branching by English color / category labels
+
+Role separation:
+
+users.try_on_image_url — default full-body image registered by the user
+try_ons.original_image_url — snapshot of the original image for a specific request
+try_ons.generated_image_url — AI-generated result image
+try_ons.status — try-on processing status
+
+⸻
+
+Image Upload (S3)
+
+Completed:
+
+* S3 uploader (global/infra/s3)
+* POST /api/v1/users/me/profile-image (multipart)
+* POST /api/v1/users/me/try-on-image (multipart)
 
 ⸻
 
@@ -332,6 +429,13 @@ Or:
 
 docker compose -f compose.prod.yaml logs --tail=200 -f app
 
+Required server env (compose.prod.yaml passes these through):
+
+OPENAI_API_KEY                 (AI virtual try-on)
+AWS S3 credentials / bucket    (image upload)
+Firebase service account JSON  (FCM)
+MYSQL_HOST_PORT                (local port collision avoidance)
+
 ⸻
 
 6. Critical Warnings
@@ -353,10 +457,14 @@ For Liquibase:
 Never modify an already-applied changeset.
 Always add a new changeset for schema changes.
 
-Example:
+Currently applied changesets:
 
-0017-...
-0018-...
+0001-initial-schema
+0016-add-try-on-image-url-to-users
+0017-extend-try-ons
+0018-extend-nfc-tags-to-options
+
+Add new changesets as 0019-..., 0020-..., etc.
 
 Order data should be created through APIs whenever possible.
 
@@ -367,6 +475,7 @@ Price snapshot
 Cart cleanup
 Stock restore on cancellation
 Notification creation when READY
+FCM push on READY (when token is registered)
 
 These behaviors are implemented in service logic, so bypassing APIs may break consistency.
 
@@ -382,125 +491,44 @@ CUSTOMER checklist:
 
 Login
 Product list
-NFC lookup
+NFC lookup (option-level)
 Product detail
 Add to cart
 Get cart
 Create order
 Order list
-Order detail
+Order detail (clothesId, thumbnailImageUrl visible)
+Cancel order
 Notification list
 My Page
+Profile / try-on image upload
+AI virtual try-on
 
 STAFF checklist:
 
 Login
 Admin home summary
 Admin order list
-Admin order detail
+Admin order detail (customer name + phone visible)
 Update order status
-Create notification when READY
+Cancel order (admin)
+Notification created when READY
+FCM push delivered when READY (if fcm_token present)
 Mark order as PICKED_UP
 
 ⸻
 
-2. PATCH /api/v1/users/me
+2. FCM End-to-End Polish
 
-My Page profile update API.
+FCM is integrated but still needs:
 
-Editable fields:
-
-name
-phone
-height
-weight
-ageGroup
-address
-
-Do not update these fields through this API:
-
-loginId
-role
-password
-profileImageUrl
-tryOnImageUrl
-
-Images should be handled by separate multipart upload APIs later.
+Removal of /api/v1/notifications/test-fcm before final demo
+Verification that READY transition reliably triggers push for users with fcm_token
+Handling of TOKEN_EMPTY / FCM_DISABLED / network failure paths in production logs
 
 ⸻
 
-3. Image Upload APIs
-
-The image upload flow still requires frontend discussion.
-
-Candidate APIs:
-
-PATCH /api/v1/users/me/profile-image
-PATCH /api/v1/users/me/try-on-image
-
-Candidate upload strategies:
-
-Server-side multipart upload
-Presigned URL upload
-
-For now, customer04 already has a demo S3 URL, so the “registered image” state can be demonstrated.
-
-⸻
-
-4. AI Virtual Try-On
-
-The try_ons table already exists.
-
-Role separation:
-
-users.try_on_image_url
-
-The default full-body image registered by the user.
-
-try_ons.original_image_url
-
-Snapshot of the original image used for a specific try-on request.
-
-try_ons.generated_image_url
-
-AI-generated result image.
-
-try_ons.status
-
-Try-on processing status.
-
-Actual AI integration has not been implemented yet.
-
-Recommended approach:
-
-Start with a mock generated image.
-Then integrate an external AI service later.
-
-Possible statuses:
-
-PENDING
-PROCESSING
-DONE
-FAILED
-
-⸻
-
-5. FCM Push Notification
-
-Currently, notifications are only saved in the database.
-
-FCM requires:
-
-Android fcm_token registration
-Firebase configuration
-Push sending logic
-Device permission handling
-
-If the demo is close, this should be lower priority.
-
-⸻
-
-6. Swagger Error Documentation
+3. Swagger Error Documentation
 
 Not all domains have full @ApiResponses documentation.
 
@@ -512,15 +540,11 @@ This improves documentation quality, but it is not critical for the demo flow.
 
 If the demo is close, follow this order:
 
-1. End-to-End demo flow check
-2. Fix missing fields or broken API responses found during the E2E check
-3. PATCH /api/v1/users/me
-4. Check whether notification responses include orderId
-5. Check whether admin order detail includes customer name and phone
-6. Image upload APIs
-7. AI virtual try-on mock
-8. FCM push notification
-9. Swagger error documentation
+1. End-to-End demo flow check (CUSTOMER + STAFF)
+2. Fix any field or response gaps surfaced by the E2E run
+3. FCM READY-push verification on the live server
+4. Remove /api/v1/notifications/test-fcm
+5. Swagger error documentation
 
 ⸻
 
@@ -591,7 +615,7 @@ Do not expose internal exception details to clients.
 
 12. Important API Path Rules
 
-Use this path for the customer order list:
+Customer order list:
 
 GET /api/v1/order
 
@@ -599,24 +623,49 @@ Do not use:
 
 GET /api/v1/order/me
 
-Use this path for the cart:
+Customer order cancel (note: POST, not PATCH):
 
-GET /api/v1/cart
+POST /api/v1/order/{orderId}/cancel
 
-Use this path for notifications:
+Cart:
 
-GET /api/v1/notifications
+GET    /api/v1/cart
+POST   /api/v1/cart/items
+PATCH  /api/v1/cart/items/{cartItemId}
+DELETE /api/v1/cart/items/{cartItemId}
+DELETE /api/v1/cart
 
-Use this path for My Page summary:
+Notifications:
 
-GET /api/v1/users/me
+GET  /api/v1/notifications
+POST /api/v1/notifications/test-fcm   (TEMP — remove before final demo)
 
-Use these paths for admin orders:
+My Page:
 
-GET /api/v1/admin/orders
-GET /api/v1/admin/orders/{orderId}
+GET   /api/v1/users/me
+PATCH /api/v1/users/me
+POST  /api/v1/users/me/profile-image     (multipart)
+POST  /api/v1/users/me/try-on-image      (multipart)
+POST  /api/v1/users/me/fcm-token
+
+Try-on:
+
+POST /api/v1/try-ons
+GET  /api/v1/try-ons
+GET  /api/v1/try-ons/{tryOnId}
+
+Auth:
+
+POST /api/v1/auth/signup
+POST /api/v1/auth/login
+GET  /api/v1/auth/check-login-id
+
+Admin orders:
+
+GET   /api/v1/admin/orders
+GET   /api/v1/admin/orders/{orderId}
 PATCH /api/v1/admin/orders/{orderId}/status
-GET /api/v1/admin/orders/summary
+GET   /api/v1/admin/orders/summary
 
 ⸻
 
@@ -665,5 +714,5 @@ NFC lookup
 -> Cart or direct order
 -> Mock payment
 -> Staff status update
--> Customer notification
+-> Customer notification (in-app + FCM)
 -> Pickup
