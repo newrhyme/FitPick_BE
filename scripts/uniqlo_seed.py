@@ -298,9 +298,11 @@ def s3_upload_from_url(client, src_url: str, key: str) -> tuple[str, bool]:
     r = requests.get(src_url, headers=headers, timeout=20)
     r.raise_for_status()
     content_type = r.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+    # 버킷이 "Bucket owner enforced" (ACL 비활성)이므로 ACL 인자 안 전달.
+    # 공개 접근은 버킷 정책으로 보장됨 (기존 demo 이미지와 동일 경로 사용).
     client.put_object(
         Bucket=S3_BUCKET, Key=key, Body=r.content,
-        ContentType=content_type, ACL="public-read",
+        ContentType=content_type,
     )
     return public_url, False
 
