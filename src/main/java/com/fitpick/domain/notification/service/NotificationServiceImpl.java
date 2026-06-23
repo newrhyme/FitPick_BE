@@ -69,17 +69,21 @@ public class NotificationServiceImpl implements NotificationService {
                 userId, null, request.title(), request.body(), NotificationType.PICKUP_READY
         ));
 
-        // FCM 데이터 페이로드: 사용자 data + notificationId 자동 주입 (모든 값 string).
-        Map<String, String> dataPayload = new HashMap<>();
+        // FCM에는 클라이언트가 보낸 data만 그대로 전송 (모든 값 string).
+        Map<String, String> fcmData = new HashMap<>();
         if (request.data() != null) {
             request.data().forEach((k, v) -> {
-                if (v != null) dataPayload.put(k, String.valueOf(v));
+                if (v != null) fcmData.put(k, String.valueOf(v));
             });
         }
-        dataPayload.put("notificationId", String.valueOf(saved.getId()));
 
         FcmSendResult result = fcmService.send(
-                user.getFcmToken(), request.title(), request.body(), dataPayload);
-        return new TestFcmResponse(saved.getId(), result.sent(), result.messageId(), result.reason());
+                user.getFcmToken(), request.title(), request.body(), fcmData);
+
+        // 응답 data: FCM에 보낸 키들 + notificationId 추가 (read 처리용).
+        Map<String, String> responseData = new HashMap<>(fcmData);
+        responseData.put("notificationId", String.valueOf(saved.getId()));
+
+        return new TestFcmResponse(result.sent(), result.messageId(), result.reason(), responseData);
     }
 }

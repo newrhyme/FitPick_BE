@@ -30,8 +30,8 @@ public interface NotificationDocs {
                           "메시지는 Firebase Cloud Messaging의 \"notification + data\" 형식으로 구성됩니다 " +
                           "(notification: title/body는 시스템 트레이 표시용, data: 앱이 받아 처리하는 키-값 페이로드). " +
                           "data 필드는 선택이며 모든 값은 string으로 전송됩니다(number/boolean 입력 시 자동 변환). " +
-                          "서버가 data 페이로드에 'notificationId' 키를 자동 추가해 클라이언트가 푸시 수신 즉시 read 호출에 활용할 수 있습니다. " +
-                          "응답에는 notificationId(저장된 알림 ID) + sent/messageId/reason 포함. " +
+                          "FCM 메시지에는 요청 data가 그대로 전송됩니다. " +
+                          "응답 body의 data 안에는 요청 data echo + notificationId(저장된 알림 ID)가 함께 포함됩니다 — 클라이언트가 이 ID로 read 처리 호출. " +
                           "FCM 3단계(Firebase Admin SDK 통합) 검증용 임시 API — 시연 전 제거 예정."
     )
     @SecurityRequirement(name = "bearerAuth")
