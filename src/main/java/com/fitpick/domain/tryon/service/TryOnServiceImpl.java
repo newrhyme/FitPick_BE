@@ -222,23 +222,31 @@ public class TryOnServiceImpl implements TryOnService {
     private String buildPrompt(String color, String category) {
         StringBuilder sb = new StringBuilder();
         sb.append("""
-                Create a realistic virtual try-on image for a shopping app.
-
-                Use the first image as the person's full-body reference.
-                Use the second image as the clothing or accessory product reference.
-                Dress or equip the person with the product naturally.
-
-                CRITICAL RULES — must not violate:
-                - DO NOT add any text, labels, captions, watermarks, logos, or written characters to the output image.
-                - DO NOT overlay product information on the image.
-                - The output must be a clean photograph with no annotations.
-
-                Preservation rules:
-                - Preserve the person's identity, face, body shape, pose, background, and lighting.
-                - Do not change the person's face or identity.
-                - Do not add or remove other clothing items unless replacing the same category.
-                - If the product is an accessory (bag, hat, watch), apply it naturally while keeping the original outfit.
-
+                    Create a realistic virtual try-on image for a shopping app.
+                    
+                    Use the first image as the person's full-body reference.
+                    Use the second image as the clothing or accessory product reference.
+                    Dress or equip the person with the product naturally.
+                    
+                    CRITICAL RULES — must not violate:
+                    - DO NOT change the person's face. The face must be IDENTICAL to the first image: same facial features, same skin tone, same hair, same eyes, same nose, same mouth, same expression.
+                    - DO NOT add any text, labels, captions, watermarks, logos, or written characters to the output image.
+                    - DO NOT overlay product information on the image.
+                    - The output must be a clean photograph with no annotations.
+                    
+                    Face preservation (highest priority):
+                    - The person in the output MUST be recognizable as the same individual from the first image.
+                    - Treat the face region as a locked area — do not regenerate, redraw, or modify it.
+                    - Keep all facial proportions, skin texture, and identifying features exactly as in the source.
+                    
+                    Body and scene preservation:
+                    - Preserve the person's body shape, pose, hands, and posture.
+                    - Preserve the background and lighting exactly.
+                    - Do not change the person's hair style or color.
+                    - Do not add or remove other clothing items unless replacing the same category.
+                    - If the product is an accessory (bag, hat, watch), apply it naturally while keeping the original outfit.
+                    
+                    The output should look like the same photograph with only the relevant clothing/accessory changed.
                 """);
 
         if (category != null && !category.isBlank()) {
