@@ -24,8 +24,11 @@ public interface NotificationDocs {
     ApiResponse<?> getMyNotifications(CustomUserDetails userDetails, @ParameterObject Pageable pageable);
 
     @Operation(
-            summary = "[TEMP] FCM 테스트 발송",
+            summary = "[TEMP] FCM 테스트 발송 (notification + optional data payload)",
             description = "본인의 users.fcm_token으로 즉시 테스트 푸시를 발송합니다. " +
+                          "메시지는 Firebase Cloud Messaging의 \"notification + data\" 형식으로 구성됩니다 " +
+                          "(notification: title/body는 시스템 트레이 표시용, data: 앱이 받아 처리하는 키-값 페이로드). " +
+                          "data 필드는 선택이며 모든 값은 string으로 전송됩니다(number/boolean 입력 시 자동 변환). " +
                           "응답의 sent=true면 발송 성공, false면 reason 필드에 사유(FCM_DISABLED / TOKEN_EMPTY / 실제 발송 오류 메시지). " +
                           "FCM 3단계(Firebase Admin SDK 통합) 검증용 임시 API — 시연 전 제거 예정."
     )
