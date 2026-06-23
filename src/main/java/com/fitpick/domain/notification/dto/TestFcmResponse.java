@@ -17,8 +17,8 @@ public record TestFcmResponse(
         String reason,
 
         @Schema(
-                description = "요청 data를 echo + notificationId(저장된 알림 ID, 클라이언트 read 처리용) 포함. "
-                        + "FCM 메시지의 data 페이로드에는 notificationId가 들어가지 않고 요청 data 그대로 전송됨.",
+                description = "FCM 메시지의 data와 동일 — 요청 data + notificationId(서버 자동 주입). "
+                        + "모든 값은 string (Firebase 명세). 클라이언트는 notificationId로 read 처리 호출.",
                 example = "{\"type\":\"PICKUP_READY\",\"orderId\":\"42\",\"notificationId\":\"57\"}"
         )
         Map<String, String> data

@@ -69,21 +69,20 @@ public class NotificationServiceImpl implements NotificationService {
                 userId, null, request.title(), request.body(), NotificationType.PICKUP_READY
         ));
 
-        // FCM에는 클라이언트가 보낸 data만 그대로 전송 (모든 값 string).
+        // FCM data 페이로드: 클라이언트 data + notificationId 자동 주입.
+        // Firebase 명세상 모든 값은 string이어야 함 (number/boolean은 String.valueOf로 변환).
         Map<String, String> fcmData = new HashMap<>();
         if (request.data() != null) {
             request.data().forEach((k, v) -> {
                 if (v != null) fcmData.put(k, String.valueOf(v));
             });
         }
+        fcmData.put("notificationId", String.valueOf(saved.getId()));
 
         FcmSendResult result = fcmService.send(
                 user.getFcmToken(), request.title(), request.body(), fcmData);
 
-        // 응답 data: FCM에 보낸 키들 + notificationId 추가 (read 처리용).
-        Map<String, String> responseData = new HashMap<>(fcmData);
-        responseData.put("notificationId", String.valueOf(saved.getId()));
-
-        return new TestFcmResponse(result.sent(), result.messageId(), result.reason(), responseData);
+        // 응답 data는 FCM에 보낸 것과 동일 (디바이스 수신과 같은 구조).
+        return new TestFcmResponse(result.sent(), result.messageId(), result.reason(), fcmData);
     }
 }
