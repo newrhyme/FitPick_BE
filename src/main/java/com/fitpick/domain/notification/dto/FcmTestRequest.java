@@ -18,8 +18,10 @@ public record FcmTestRequest(
         @Schema(
                 description = "선택적 데이터 페이로드. FCM 규격상 모든 값은 string으로 전송됨 "
                         + "(number/boolean 입력 시 String.valueOf로 자동 변환). 비우거나 생략 가능. "
-                        + "FCM 메시지와 응답 body 모두에 'notificationId' 키가 자동 주입됨(저장된 알림 ID).",
-                example = "{\"type\":\"PICKUP_READY\",\"orderId\":\"42\"}"
+                        + "FCM 메시지와 응답 body 모두에 'notificationId' 키가 자동 주입됨(저장된 알림 ID) — "
+                        + "아래 example에는 디바이스 측 수신 처리 로직 구현 편의를 위해 notificationId 키도 함께 표기되나, "
+                        + "요청 시 클라이언트가 직접 보낼 필요는 없음(서버가 덮어씀).",
+                example = "{\"type\":\"PICKUP_READY\",\"orderId\":\"42\",\"notificationId\":\"57\"}"
         )
         Map<String, Object> data
 ) {
