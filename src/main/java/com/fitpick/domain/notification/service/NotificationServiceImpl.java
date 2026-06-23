@@ -53,9 +53,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable) {
-        Page<Notification> notifications = notificationRepository.findByUserId(userId, pageable);
+        // 읽지 않은(isRead=false) 알림만 반환
+        Page<Notification> notifications = notificationRepository.findByUserIdAndIsReadFalse(userId, pageable);
         Page<NotificationResponse> mapped = notifications.map(NotificationResponse::from);
         return PageResponse.from(mapped);
+    }
+
+    @Override
+    @Transactional
+    public int markAllAsRead(Long userId) {
+        return notificationRepository.markAllAsReadByUserId(userId);
     }
 
     @Override

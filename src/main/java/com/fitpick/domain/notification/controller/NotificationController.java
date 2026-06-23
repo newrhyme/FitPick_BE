@@ -2,6 +2,7 @@ package com.fitpick.domain.notification.controller;
 
 import com.fitpick.domain.notification.controller.docs.NotificationDocs;
 import com.fitpick.domain.notification.dto.FcmTestRequest;
+import com.fitpick.domain.notification.dto.MarkAllReadResponse;
 import com.fitpick.domain.notification.dto.NotificationResponse;
 import com.fitpick.domain.notification.dto.TestFcmResponse;
 import com.fitpick.domain.notification.service.NotificationService;
@@ -47,6 +48,14 @@ public class NotificationController implements NotificationDocs {
     ) {
         NotificationResponse response = notificationService.markAsRead(userDetails.getUserId(), notificationId);
         return ApiResponse.success(SuccessCode.OK, response);
+    }
+
+    @PatchMapping("/read-all")
+    public ApiResponse<?> markAllAsRead(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        int updated = notificationService.markAllAsRead(userDetails.getUserId());
+        return ApiResponse.success(SuccessCode.OK, new MarkAllReadResponse(updated));
     }
 
     // [TEMP] FCM 3단계 통합 검증용 — 시연 전 제거 예정.

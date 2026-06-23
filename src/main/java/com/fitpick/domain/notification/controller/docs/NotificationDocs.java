@@ -14,8 +14,9 @@ import org.springframework.data.domain.Pageable;
 public interface NotificationDocs {
 
     @Operation(
-            summary = "내 알림 목록 조회",
-            description = "로그인 사용자의 알림 목록을 최신순으로 페이지네이션 조회합니다. 알림이 없으면 빈 페이지를 반환합니다."
+            summary = "내 알림 목록 조회 (읽지 않은 알림만)",
+            description = "로그인 사용자의 알림 중 isRead=false인 항목만 최신순으로 페이지네이션 조회합니다. " +
+                          "안 읽은 알림이 없으면 빈 페이지를 반환합니다."
     )
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
@@ -36,6 +37,19 @@ public interface NotificationDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "알림 없음 (NT001)")
     })
     ApiResponse<?> markAsRead(CustomUserDetails userDetails, Long notificationId);
+
+    @Operation(
+            summary = "전체 알림 읽음 처리",
+            description = "본인의 안 읽은(isRead=false) 알림 전부를 일괄 읽음 처리합니다. " +
+                          "응답 data.updatedCount에 이번 호출로 처리된 건수가 반환됩니다 " +
+                          "(이미 모두 읽은 상태였다면 0). idempotent — 여러 번 호출해도 안전."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "처리 성공 — MarkAllReadResponse(updatedCount) 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)")
+    })
+    ApiResponse<?> markAllAsRead(CustomUserDetails userDetails);
 
     @Operation(
             summary = "[TEMP] FCM 테스트 발송 (notification + optional data payload)",
