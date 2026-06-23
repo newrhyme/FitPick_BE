@@ -3,11 +3,11 @@ package com.fitpick.domain.notification.controller;
 import com.fitpick.domain.notification.controller.docs.NotificationDocs;
 import com.fitpick.domain.notification.dto.FcmTestRequest;
 import com.fitpick.domain.notification.dto.NotificationResponse;
+import com.fitpick.domain.notification.dto.TestFcmResponse;
 import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.global.common.code.SuccessCode;
 import com.fitpick.global.common.response.ApiResponse;
 import com.fitpick.global.common.response.PageResponse;
-import com.fitpick.global.infra.firebase.FcmService.FcmSendResult;
 import com.fitpick.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class NotificationController implements NotificationDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody FcmTestRequest request
     ) {
-        FcmSendResult result = notificationService.sendTestFcm(userDetails.getUserId(), request);
+        TestFcmResponse result = notificationService.sendTestFcm(userDetails.getUserId(), request);
         return ApiResponse.success(SuccessCode.OK, result);
     }
 }

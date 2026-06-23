@@ -3,6 +3,7 @@ package com.fitpick.domain.notification.service;
 import com.fitpick.domain.auth.exception.AuthErrorCode;
 import com.fitpick.domain.notification.dto.FcmTestRequest;
 import com.fitpick.domain.notification.dto.NotificationResponse;
+import com.fitpick.domain.notification.dto.TestFcmResponse;
 import com.fitpick.domain.notification.entity.Notification;
 import com.fitpick.domain.notification.entity.NotificationType;
 import com.fitpick.domain.notification.repository.NotificationRepository;
@@ -19,8 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,19 +58,28 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public FcmSendResult sendTestFcm(Long userId, FcmTestRequest request) {
+    @Transactional
+    public TestFcmResponse sendTestFcm(Long userId, FcmTestRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
-        // FCM 데이터 페이로드는 모든 값이 string이어야 함. null/비어있으면 empty map.
-        Map<String, String> dataPayload = request.data() == null ? Map.of()
-                : request.data().entrySet().stream()
-                        .filter(e -> e.getValue() != null)
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                e -> String.valueOf(e.getValue())));
+        // 알림 DB 저장 — 클라이언트가 read 처리 호출 가능하게 함.
+        // 시연 전 제거 예정 API라 type은 기존 PICKUP_READY 차용.
+        Notification saved = notificationRepository.save(Notification.create(
+                userId, null, request.title(), request.body(), NotificationType.PICKUP_READY
+        ));
 
-        return fcmService.send(user.getFcmToken(), request.title(), request.body(), dataPayload);
+        // FCM 데이터 페이로드: 사용자 data + notificationId 자동 주입 (모든 값 string).
+        Map<String, String> dataPayload = new HashMap<>();
+        if (request.data() != null) {
+            request.data().forEach((k, v) -> {
+                if (v != null) dataPayload.put(k, String.valueOf(v));
+            });
+        }
+        dataPayload.put("notificationId", String.valueOf(saved.getId()));
+
+        FcmSendResult result = fcmService.send(
+                user.getFcmToken(), request.title(), request.body(), dataPayload);
+        return new TestFcmResponse(saved.getId(), result.sent(), result.messageId(), result.reason());
     }
 }
