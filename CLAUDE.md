@@ -90,6 +90,8 @@ global/infra/s3
 global/infra/openai
 global/infra/firebase
 
+The `global/config/AsyncConfig` defines the `tryOnExecutor` ThreadPoolTaskExecutor used by `TryOnAsyncProcessor`.
+
 Services generally follow the interface + implementation pattern.
 
 Example:
@@ -330,17 +332,28 @@ Notification
 
 Completed:
 
-* Notification persistence
-* Customer notification list (GET /api/v1/notifications)
-* PICKUP_READY notification creation when an order becomes READY
+* Notification persistence (notifications table now has try_on_id FK + image_url)
+* Customer notification list (GET /api/v1/notifications) — returns only isRead=false
+* Unread count (GET /api/v1/notifications/unread-count) — for red-dot badge
+* Mark single as read (PATCH /api/v1/notifications/{notificationId}/read) — idempotent
+* Mark all as read (PATCH /api/v1/notifications/read-all)
+* Order status change notification + FCM push (admin status change requires a "comment" field; used as FCM body)
+* Try-on completion notification + FCM push (TRY_ON_DONE)
+* Try-on failure notification + FCM push (TRY_ON_FAILED)
 * FCM token persistence (users.fcm_token)
 * FCM test send API (POST /api/v1/notifications/test-fcm) — TEMP, to be removed before demo
 * Firebase Admin SDK integrated (FcmService)
 
+NotificationType values:
+
+PICKUP_READY
+TRY_ON_DONE
+TRY_ON_FAILED
+
 Status:
 
 In-app notifications via the notifications table are fully wired end-to-end.
-FCM real-send wiring on the READY transition is integrated through FcmService.
+FCM real-send is integrated through FcmService for order status changes and try-on completion/failure.
 The /test-fcm endpoint is a temporary 3-step integration check and should be removed before the final demo.
 
 ⸻
@@ -350,11 +363,25 @@ Try-On (AI Virtual Try-On)
 Completed:
 
 * try_ons table + status flow (PENDING / PROCESSING / DONE / FAILED)
-* POST /api/v1/try-ons (create try-on request)
+* try_ons.style column (free-text background/mood override, max 200 chars)
+* POST /api/v1/try-ons (create try-on request — returns PROCESSING immediately)
 * GET  /api/v1/try-ons/{tryOnId}
 * GET  /api/v1/try-ons (my list)
 * OpenAI gpt-image-1 integration (OpenAiImageClient)
 * Prompt branching by English color / category labels
+* Background removed + TPO-matched new background generation
+* style field overrides automatic TPO mapping when provided
+* Async processing via dedicated thread pool (tryOnExecutor, core=2 / max=4 / queue=20)
+* On DONE: TRY_ON_DONE notification + FCM push
+* On FAILED: TRY_ON_FAILED notification + FCM push
+* Output image size: 1024x1024 (reduced from 1024x1536 for faster response)
+
+Async flow:
+
+1. Controller saves a PROCESSING row in REQUIRES_NEW so the row is committed immediately
+2. asyncProcessor.process(...) runs in tryOnExecutor — OpenAI call → S3 upload → DB DONE/FAILED → notification
+3. Response is returned right away with status=PROCESSING and generatedImageUrl=null
+4. Client polls GET /api/v1/try-ons/{tryOnId} or waits for the FCM push to fetch the final image
 
 Role separation:
 
@@ -362,6 +389,7 @@ users.try_on_image_url — default full-body image registered by the user
 try_ons.original_image_url — snapshot of the original image for a specific request
 try_ons.generated_image_url — AI-generated result image
 try_ons.status — try-on processing status
+try_ons.style — optional background/mood override (overrides auto TPO)
 
 ⸻
 
@@ -463,8 +491,10 @@ Currently applied changesets:
 0016-add-try-on-image-url-to-users
 0017-extend-try-ons
 0018-extend-nfc-tags-to-options
+0019-extend-notifications-for-try-on (adds notifications.try_on_id FK + image_url)
+0020-add-style-to-try-ons (adds try_ons.style)
 
-Add new changesets as 0019-..., 0020-..., etc.
+Add new changesets as 0021-..., 0022-..., etc.
 
 Order data should be created through APIs whenever possible.
 
@@ -637,8 +667,11 @@ DELETE /api/v1/cart
 
 Notifications:
 
-GET  /api/v1/notifications
-POST /api/v1/notifications/test-fcm   (TEMP — remove before final demo)
+GET   /api/v1/notifications                          (returns only isRead=false)
+GET   /api/v1/notifications/unread-count
+PATCH /api/v1/notifications/{notificationId}/read    (idempotent)
+PATCH /api/v1/notifications/read-all
+POST  /api/v1/notifications/test-fcm                 (TEMP — remove before final demo)
 
 My Page:
 
