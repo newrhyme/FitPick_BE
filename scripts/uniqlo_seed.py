@@ -110,6 +110,16 @@ PRODUCTS: list[ProductSpec] = [
     ProductSpec("E484085", [("65", "999")],                "BAG"),
     ProductSpec("E462191", [("01", "004")],                "BAG"),
     ProductSpec("E484086", [("74", "999")],                "BAG"),
+
+    # 추가 시연 후보: 기존 seed와 중복 없는 OUTER/DRESS/SHOES/ACCESSORY 보강
+    ProductSpec("E465203", [("57", "005")],                "OUTER"),     # DRY-EX UV PROTECTION풀집파카 / OLIVE / L
+    ProductSpec("E469292", [("69", "005")],                "OUTER"),     # 포켓터블UV PROTECTION파카 / NAVY / L
+    ProductSpec("E483986", [("31", "004")],                "DRESS"),     # AIRism코튼T원피스(반팔) / BEIGE / M
+    ProductSpec("E487286", [("68", "004")],                "DRESS"),     # 콤비네이션티어드원피스(슬리브리스) / BLUE / M
+    ProductSpec("E484330", [("32", "260")],                "SHOES"),     # 콤비네이션스니커즈 / BEIGE / 26
+    ProductSpec("E482815", [("09", "240")],                "SHOES"),     # 스퀘어플랫슈즈 / BLACK / 24
+    ProductSpec("E433776", [("69", "999")],                "ACCESSORY"), # UV PROTECTION컴팩트엄브렐라 / NAVY / FREE
+    ProductSpec("E478307", [("31", "999")],                "ACCESSORY"), # UV PROTECTION캡(트윌) / BEIGE / FREE
 ]
 
 
