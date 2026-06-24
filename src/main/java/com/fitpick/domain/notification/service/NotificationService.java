@@ -20,6 +20,11 @@ public interface NotificationService {
     // 호출 전 tryOn.status == DONE 이어야 하며 generatedImageUrl 이 채워져 있어야 함.
     com.fitpick.domain.notification.entity.Notification notifyTryOnDone(TryOn tryOn);
 
+    // 가상 피팅 실패 시 알림 생성 + FCM 발송.
+    // imageUrl = null, data = { tryOnId, notificationId } (모두 string).
+    // 비동기 처리 흐름에서 실패 케이스를 프론트에 알리기 위함.
+    com.fitpick.domain.notification.entity.Notification notifyTryOnFailed(Long userId, Long tryOnId);
+
     // (추가) 내 알림 목록 조회 — 읽지 않은(isRead=false) 알림만 반환
     PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable);
 

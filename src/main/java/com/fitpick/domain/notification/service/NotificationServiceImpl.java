@@ -91,6 +91,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    public Notification notifyTryOnFailed(Long userId, Long tryOnId) {
+        String title = NotificationType.TRY_ON_FAILED.getTitle();
+        String body = NotificationType.TRY_ON_FAILED.getBody();
+        Notification saved = notificationRepository.save(Notification.createForTryOn(
+                userId,
+                tryOnId,
+                title,
+                body,
+                null,
+                NotificationType.TRY_ON_FAILED
+        ));
+
+        User user = userRepository.findById(userId).orElse(null);
+        String token = (user != null) ? user.getFcmToken() : null;
+
+        Map<String, String> data = new HashMap<>();
+        data.put("tryOnId", String.valueOf(tryOnId));
+        data.put("notificationId", String.valueOf(saved.getId()));
+
+        fcmService.send(token, title, body, data);
+
+        return saved;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable) {
         // 읽지 않은(isRead=false) 알림만 반환
