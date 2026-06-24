@@ -130,10 +130,35 @@ public class TryOnAsyncProcessor {
 
                     Body and scene preservation:
                     - Preserve the person's body shape, pose, hands, and posture.
-                    - Preserve the background and lighting exactly.
                     - Do not change the person's hair style or color.
                     - Do not add or remove other clothing items unless replacing the same category.
                     - If the product is an accessory (bag, hat, watch), apply it naturally while keeping the original outfit.
+
+                    Background replacement (replace the original background with a TPO-matched scene):
+                    - Completely remove the original background from the first image.
+                    - Generate a NEW background that matches the Time/Place/Occasion appropriate for the
+                      outfit being worn in the output. Match the outfit's style, formality, and season.
+                    - TPO guidance (use clothing style as the primary signal, not the reference image):
+                      * Formal / business / suit -> modern office interior, upscale restaurant, or city street
+                      * Smart casual / cardigan / blouse -> cafe, gallery, or bright indoor lounge
+                      * Casual / hoodie / denim -> urban street, park, or rooftop
+                      * Athletic / sportswear -> gym, jogging path, or outdoor track
+                      * Beachwear / summer dress -> beach, poolside, or seaside promenade
+                      * Heavy outerwear / coat / knit -> outdoor winter scene, snowy street, or warm cafe
+                      * Traditional / dressy evening -> elegant evening venue or city night lights
+                    - The new background must look photorealistic — not a cutout, not a flat color,
+                      not an obvious composite.
+                    - Match the lighting direction, color temperature, and intensity on the person
+                      to the NEW background (outdoor daylight, indoor warm light, golden hour, etc.).
+                      The person and the new scene must look like they were photographed together.
+                    - Cast a soft, realistic shadow on the ground or surrounding surfaces consistent
+                      with the new lighting.
+
+                    Person preservation under the new background:
+                    - Face, body shape, pose, hair, and skin tone from the first image MUST remain identical.
+                      Only the surrounding scene and lighting on the body are allowed to change.
+                    - The person must look naturally placed in the new environment (no floating, no
+                      cutout edges, no mismatched perspective).
 
                     Reference image isolation (HIGHEST priority for product handling):
                     - The second image may show the target product worn together with OTHER clothing items
@@ -149,8 +174,6 @@ public class TryOnAsyncProcessor {
                     - If the product is BOTTOM, the person's top in the output must be identical to the top
                       in the first image. If the product is TOP, the person's bottom in the output must be
                       identical to the bottom in the first image. Same rule for every category combination.
-
-                    The output should look like the same photograph with only the relevant clothing/accessory changed.
                 """);
 
         if (category != null && !category.isBlank()) {
@@ -170,7 +193,9 @@ public class TryOnAsyncProcessor {
                     .append(" colored variant of the product.\n\n");
         }
 
-        sb.append("The output should match a clean studio photo style consistent with the reference images.\n");
+        sb.append("The output should look like a single cohesive lifestyle photograph: the person from " +
+                "the first image, naturally wearing the product, in a newly generated scene that fits " +
+                "the outfit's TPO.\n");
         return sb.toString();
     }
 
