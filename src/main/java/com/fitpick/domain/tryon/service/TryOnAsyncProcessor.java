@@ -135,6 +135,21 @@ public class TryOnAsyncProcessor {
                     - Do not add or remove other clothing items unless replacing the same category.
                     - If the product is an accessory (bag, hat, watch), apply it naturally while keeping the original outfit.
 
+                    Reference image isolation (HIGHEST priority for product handling):
+                    - The second image may show the target product worn together with OTHER clothing items
+                      (top, bottom, outer, shoes, bag, hat, accessories) on a model.
+                      These additional items are NOT the product — they are styling around the product.
+                    - Extract ONLY the specified product category from the second image.
+                    - Completely IGNORE every other garment, accessory, color, and styling element visible in
+                      the second image. Do not transfer the model's top when the product is a bottom.
+                      Do not transfer the model's bottom when the product is a top.
+                      Do not transfer shoes, bags, or accessories that are not the product.
+                    - The person's existing clothing in all non-target categories must remain EXACTLY as in
+                      the first image (same garment, same color, same shape, same length).
+                    - If the product is BOTTOM, the person's top in the output must be identical to the top
+                      in the first image. If the product is TOP, the person's bottom in the output must be
+                      identical to the bottom in the first image. Same rule for every category combination.
+
                     The output should look like the same photograph with only the relevant clothing/accessory changed.
                 """);
 
