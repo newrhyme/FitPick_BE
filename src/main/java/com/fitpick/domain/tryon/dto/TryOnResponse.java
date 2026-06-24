@@ -35,6 +35,9 @@ public record TryOnResponse(
         @Schema(description = "생성된 가상 착용 이미지 URL (DONE일 때만 값 존재)")
         String generatedImageUrl,
 
+        @Schema(description = "사용자 요청 배경/분위기 (요청 시 입력값 echo, 없으면 null)", example = "바닷가")
+        String style,
+
         @Schema(description = "요청 생성 시각", example = "2026-06-22T15:30:00")
         LocalDateTime createdAt
 ) {
@@ -49,6 +52,7 @@ public record TryOnResponse(
                 t.getOriginalImageUrl(),
                 t.getProductImageUrl(),
                 t.getGeneratedImageUrl(),
+                t.getStyle(),
                 t.getCreatedAt()
         );
     }

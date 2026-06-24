@@ -18,8 +18,8 @@ public class TryOnPersistenceServiceImpl implements TryOnPersistenceService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public TryOn createProcessing(Long userId, String originalImageUrl, String productImageUrl, Long clothesOptionId) {
-        TryOn tryOn = TryOn.createProcessing(userId, originalImageUrl, productImageUrl);
+    public TryOn createProcessing(Long userId, String originalImageUrl, String productImageUrl, Long clothesOptionId, String style) {
+        TryOn tryOn = TryOn.createProcessing(userId, originalImageUrl, productImageUrl, style);
         tryOn.addItem(TryOnItem.of(clothesOptionId));
         return tryOnRepository.save(tryOn);
     }

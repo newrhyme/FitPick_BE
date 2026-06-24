@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0020-add-style-to-try-ons
+      author: fitpick
+      changes:
+        - addColumn:
+            tableName: try_ons
+            columns:
+              - column:
+                  name: style
+                  type: varchar(200)

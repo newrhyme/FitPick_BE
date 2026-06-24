@@ -43,6 +43,9 @@ public class TryOn {
     @Column(name = "failure_reason", length = 500)
     private String failureReason;
 
+    @Column(length = 200)
+    private String style;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,11 +58,12 @@ public class TryOn {
     @Builder.Default
     private List<TryOnItem> items = new ArrayList<>();
 
-    public static TryOn createProcessing(Long userId, String originalImageUrl, String productImageUrl) {
+    public static TryOn createProcessing(Long userId, String originalImageUrl, String productImageUrl, String style) {
         return TryOn.builder()
                 .userId(userId)
                 .originalImageUrl(originalImageUrl)
                 .productImageUrl(productImageUrl)
+                .style(style)
                 .status(TryOnStatus.PROCESSING)
                 .build();
     }

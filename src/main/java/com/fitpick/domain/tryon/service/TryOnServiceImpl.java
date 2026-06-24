@@ -67,12 +67,15 @@ public class TryOnServiceImpl implements TryOnService {
             throw new CustomException(TryOnErrorCode.NO_PRODUCT_IMAGE);
         }
 
+        // style은 공백이면 null로 정규화
+        String style = (request.style() != null && !request.style().isBlank()) ? request.style().trim() : null;
+
         // PROCESSING 저장 — REQUIRES_NEW로 즉시 커밋 (async 워커가 바로 조회 가능)
-        TryOn tryOn = persistenceService.createProcessing(userId, userImageUrl, productImageUrl, option.getId());
+        TryOn tryOn = persistenceService.createProcessing(userId, userImageUrl, productImageUrl, option.getId(), style);
 
         // 백그라운드 처리 — OpenAI 호출/S3 업로드/DB DONE 업데이트/알림 발송
         String category = clothes.getCategory() != null ? clothes.getCategory().name() : null;
-        asyncProcessor.process(tryOn.getId(), userId, userImageUrl, productImageUrl, option.getColor(), category);
+        asyncProcessor.process(tryOn.getId(), userId, userImageUrl, productImageUrl, option.getColor(), category, style);
 
         // 즉시 응답 — status는 PROCESSING, generatedImageUrl은 null
         return TryOnResponse.of(tryOn, clothes.getId(), option.getId(), option.getSize(), option.getColor());
@@ -135,6 +138,7 @@ public class TryOnServiceImpl implements TryOnService {
                     t.getOriginalImageUrl(),
                     t.getProductImageUrl(),
                     t.getGeneratedImageUrl(),
+                    t.getStyle(),
                     t.getCreatedAt()
             );
         }).toList();
