@@ -120,6 +120,17 @@ PRODUCTS: list[ProductSpec] = [
     ProductSpec("E482815", [("09", "240")],                "SHOES"),     # 스퀘어플랫슈즈 / BLACK / 24
     ProductSpec("E433776", [("69", "999")],                "ACCESSORY"), # UV PROTECTION컴팩트엄브렐라 / NAVY / FREE
     ProductSpec("E478307", [("31", "999")],                "ACCESSORY"), # UV PROTECTION캡(트윌) / BEIGE / FREE
+
+    # 추가 시연 보강분 (사용자 지정 URL 기반)
+    ProductSpec("E484610", [("32", "005")],                "OUTER"),
+    ProductSpec("E468671", [("05", "005")],                "OUTER"),
+    ProductSpec("E486167", [("55", "005")],                "OUTER"),
+    ProductSpec("E482443", [("69", "005")],                "OUTER"),
+    ProductSpec("E489142", [("62", "004")],                "BOTTOM"),
+    ProductSpec("E488997", [("07", "004")],                "BOTTOM"),
+    ProductSpec("E488371", [("57", "004")],                "BOTTOM"),
+    ProductSpec("E482982", [("09", "004")],                "DRESS"),
+    ProductSpec("E484026", [("01", "004")],                "DRESS"),
 ]
 
 
