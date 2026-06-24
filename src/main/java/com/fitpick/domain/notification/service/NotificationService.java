@@ -23,6 +23,9 @@ public interface NotificationService {
     // (추가) 내 알림 목록 조회 — 읽지 않은(isRead=false) 알림만 반환
     PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable);
 
+    // 본인의 안 읽은(isRead=false) 알림 개수 — 레드닷 표시용
+    long getUnreadCount(Long userId);
+
     // 본인 알림 읽음 처리 (idempotent — 이미 읽음 상태여도 200)
     NotificationResponse markAsRead(Long userId, Long notificationId);
 

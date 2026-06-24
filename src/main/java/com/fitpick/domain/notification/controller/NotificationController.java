@@ -5,6 +5,7 @@ import com.fitpick.domain.notification.dto.FcmTestRequest;
 import com.fitpick.domain.notification.dto.MarkAllReadResponse;
 import com.fitpick.domain.notification.dto.NotificationResponse;
 import com.fitpick.domain.notification.dto.TestFcmResponse;
+import com.fitpick.domain.notification.dto.UnreadCountResponse;
 import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.global.common.code.SuccessCode;
 import com.fitpick.global.common.response.ApiResponse;
@@ -39,6 +40,14 @@ public class NotificationController implements NotificationDocs {
         PageResponse<NotificationResponse> response =
                 notificationService.getMyNotifications(userDetails.getUserId(), pageable);
         return ApiResponse.success(SuccessCode.READ_SUCCESS, response);
+    }
+
+    @GetMapping("/unread-count")
+    public ApiResponse<?> getUnreadCount(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        long count = notificationService.getUnreadCount(userDetails.getUserId());
+        return ApiResponse.success(SuccessCode.READ_SUCCESS, new UnreadCountResponse(count));
     }
 
     @PatchMapping("/{notificationId}/read")

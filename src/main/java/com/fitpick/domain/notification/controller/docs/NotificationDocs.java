@@ -25,6 +25,18 @@ public interface NotificationDocs {
     ApiResponse<?> getMyNotifications(CustomUserDetails userDetails, @ParameterObject Pageable pageable);
 
     @Operation(
+            summary = "안 읽은 알림 개수 조회 (레드닷용)",
+            description = "로그인 사용자의 isRead=false 알림 개수를 반환합니다. " +
+                          "응답 data.unreadCount 사용. 알림 없으면 0."
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공 — UnreadCountResponse(unreadCount) 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요 (E401)")
+    })
+    ApiResponse<?> getUnreadCount(CustomUserDetails userDetails);
+
+    @Operation(
             summary = "알림 읽음 처리",
             description = "본인 알림만 읽음 처리 가능. 이미 읽음 상태여도 200 (idempotent). " +
                           "응답으로 갱신된 NotificationResponse를 반환합니다."
