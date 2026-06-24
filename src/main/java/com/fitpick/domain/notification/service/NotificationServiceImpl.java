@@ -60,60 +60,37 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
-    public Notification notifyTryOnDone(TryOn tryOn) {
-        // 1) Notification DB 저장 — imageUrl 컬럼에 generatedImageUrl 그대로 저장 (조회 시 추가 lookup 없음).
+    public void notifyTryOnDone(TryOn tryOn) {
+        // 가상 피팅 완료는 FCM 푸시만 보내고 알림 DB에는 저장하지 않는다.
+        // Why: /api/v1/notifications 목록에 노출되지 않게 하려는 요구사항.
         String title = NotificationType.TRY_ON_DONE.getTitle();
         String body = NotificationType.TRY_ON_DONE.getBody();
-        Notification saved = notificationRepository.save(Notification.createForTryOn(
-                tryOn.getUserId(),
-                tryOn.getId(),
-                title,
-                body,
-                tryOn.getGeneratedImageUrl(),
-                NotificationType.TRY_ON_DONE
-        ));
 
-        // 2) FCM 발송 — 토큰 없거나 비활성이어도 skip (예외 던지지 않음).
         User user = userRepository.findById(tryOn.getUserId()).orElse(null);
         String token = (user != null) ? user.getFcmToken() : null;
 
         Map<String, String> data = new HashMap<>();
         data.put("tryOnId", String.valueOf(tryOn.getId()));
-        data.put("notificationId", String.valueOf(saved.getId()));
         if (tryOn.getGeneratedImageUrl() != null) {
             data.put("generatedImageUrl", tryOn.getGeneratedImageUrl());
         }
 
         fcmService.send(token, title, body, data);
-
-        return saved;
     }
 
     @Override
-    @Transactional
-    public Notification notifyTryOnFailed(Long userId, Long tryOnId) {
+    public void notifyTryOnFailed(Long userId, Long tryOnId) {
+        // 가상 피팅 실패도 FCM 푸시만 보내고 알림 DB에는 저장하지 않는다.
         String title = NotificationType.TRY_ON_FAILED.getTitle();
         String body = NotificationType.TRY_ON_FAILED.getBody();
-        Notification saved = notificationRepository.save(Notification.createForTryOn(
-                userId,
-                tryOnId,
-                title,
-                body,
-                null,
-                NotificationType.TRY_ON_FAILED
-        ));
 
         User user = userRepository.findById(userId).orElse(null);
         String token = (user != null) ? user.getFcmToken() : null;
 
         Map<String, String> data = new HashMap<>();
         data.put("tryOnId", String.valueOf(tryOnId));
-        data.put("notificationId", String.valueOf(saved.getId()));
 
         fcmService.send(token, title, body, data);
-
-        return saved;
     }
 
     @Override
