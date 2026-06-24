@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0019-extend-notifications-for-try-on
+      author: fitpick
+      changes:
+        - addColumn:
+            tableName: notifications
+            columns:
+              - column:
+                  name: try_on_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_notifications_try_on
+                    references: try_ons(id)
+              - column:
+                  name: image_url
+                  type: varchar(500)

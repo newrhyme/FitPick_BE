@@ -9,6 +9,7 @@ import com.fitpick.domain.notification.entity.NotificationType;
 import com.fitpick.domain.notification.exception.NotificationErrorCode;
 import com.fitpick.domain.notification.repository.NotificationRepository;
 import com.fitpick.domain.order.entity.Order;
+import com.fitpick.domain.tryon.entity.TryOn;
 import com.fitpick.domain.user.entity.User;
 import com.fitpick.domain.user.repository.UserRepository;
 import com.fitpick.global.common.response.PageResponse;
@@ -54,6 +55,37 @@ public class NotificationServiceImpl implements NotificationService {
         data.put("notificationId", String.valueOf(saved.getId()));
 
         fcmService.send(token, "#" + order.getId(), comment, data);
+
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public Notification notifyTryOnDone(TryOn tryOn) {
+        // 1) Notification DB 저장 — imageUrl 컬럼에 generatedImageUrl 그대로 저장 (조회 시 추가 lookup 없음).
+        String title = NotificationType.TRY_ON_DONE.getTitle();
+        String body = NotificationType.TRY_ON_DONE.getBody();
+        Notification saved = notificationRepository.save(Notification.createForTryOn(
+                tryOn.getUserId(),
+                tryOn.getId(),
+                title,
+                body,
+                tryOn.getGeneratedImageUrl(),
+                NotificationType.TRY_ON_DONE
+        ));
+
+        // 2) FCM 발송 — 토큰 없거나 비활성이어도 skip (예외 던지지 않음).
+        User user = userRepository.findById(tryOn.getUserId()).orElse(null);
+        String token = (user != null) ? user.getFcmToken() : null;
+
+        Map<String, String> data = new HashMap<>();
+        data.put("tryOnId", String.valueOf(tryOn.getId()));
+        data.put("notificationId", String.valueOf(saved.getId()));
+        if (tryOn.getGeneratedImageUrl() != null) {
+            data.put("generatedImageUrl", tryOn.getGeneratedImageUrl());
+        }
+
+        fcmService.send(token, title, body, data);
 
         return saved;
     }

@@ -4,6 +4,7 @@ import com.fitpick.domain.notification.dto.FcmTestRequest;
 import com.fitpick.domain.notification.dto.NotificationResponse;
 import com.fitpick.domain.notification.dto.TestFcmResponse;
 import com.fitpick.domain.order.entity.Order;
+import com.fitpick.domain.tryon.entity.TryOn;
 import com.fitpick.global.common.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
@@ -13,6 +14,11 @@ public interface NotificationService {
     // title = "#{orderId}", body = comment, data = { orderId, notificationId } (모두 string).
     // FCM 토큰 없는 사용자도 알림 DB 저장은 그대로 진행 (FCM만 skip).
     com.fitpick.domain.notification.entity.Notification notifyOrderStatusChange(Order order, String comment);
+
+    // 가상 피팅 완료 시 알림 생성 + FCM 발송.
+    // imageUrl = tryOn.generatedImageUrl, data = { tryOnId, notificationId, generatedImageUrl } (모두 string).
+    // 호출 전 tryOn.status == DONE 이어야 하며 generatedImageUrl 이 채워져 있어야 함.
+    com.fitpick.domain.notification.entity.Notification notifyTryOnDone(TryOn tryOn);
 
     // (추가) 내 알림 목록 조회 — 읽지 않은(isRead=false) 알림만 반환
     PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable);

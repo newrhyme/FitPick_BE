@@ -25,11 +25,17 @@ public class Notification {
     @Column(name = "order_id")
     private Long orderId;
 
+    @Column(name = "try_on_id")
+    private Long tryOnId;
+
     @Column(nullable = false, length = 100)
     private String title;
 
     @Column(length = 500)
     private String body;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "notification_type", nullable = false, length = 30)
@@ -51,6 +57,20 @@ public class Notification {
                 .orderId(orderId)
                 .title(title)
                 .body(body)
+                .notificationType(type)
+                .build();
+    }
+
+    public static Notification createForTryOn(Long userId, Long tryOnId,
+                                              String title, String body,
+                                              String imageUrl,
+                                              NotificationType type) {
+        return Notification.builder()
+                .userId(userId)
+                .tryOnId(tryOnId)
+                .title(title)
+                .body(body)
+                .imageUrl(imageUrl)
                 .notificationType(type)
                 .build();
     }

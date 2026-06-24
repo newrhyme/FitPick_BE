@@ -8,6 +8,7 @@ import com.fitpick.domain.clothes.exception.ClothesErrorCode;
 import com.fitpick.domain.clothes.repository.ClothesImageRepository;
 import com.fitpick.domain.clothes.repository.ClothesOptionRepository;
 import com.fitpick.domain.clothes.repository.ClothesRepository;
+import com.fitpick.domain.notification.service.NotificationService;
 import com.fitpick.domain.tryon.dto.TryOnCreateRequest;
 import com.fitpick.domain.tryon.dto.TryOnListItemResponse;
 import com.fitpick.domain.tryon.dto.TryOnResponse;
@@ -49,6 +50,7 @@ public class TryOnServiceImpl implements TryOnService {
     private final OpenAiImageClient openAiImageClient;
     private final ImageDownloader imageDownloader;
     private final S3Uploader s3Uploader;
+    private final NotificationService notificationService;
 
     @Override
     public TryOnResponse create(Long userId, TryOnCreateRequest request) {
@@ -92,6 +94,14 @@ public class TryOnServiceImpl implements TryOnService {
 
             // DONE 저장 — REQUIRES_NEW
             TryOn done = persistenceService.markDone(tryOnId, generatedUrl);
+
+            // 완료 알림 — 실패해도 try-on 응답에는 영향 없도록 격리
+            try {
+                notificationService.notifyTryOnDone(done);
+            } catch (Exception notifyEx) {
+                log.error("가상 피팅 완료 알림 발송 실패. tryOnId={}, userId={}", tryOnId, userId, notifyEx);
+            }
+
             return TryOnResponse.of(done, clothes.getId(), option.getId(), option.getSize(), option.getColor());
 
         } catch (Exception e) {
