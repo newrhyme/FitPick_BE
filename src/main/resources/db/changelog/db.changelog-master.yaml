@@ -17,3 +17,6 @@ databaseChangeLog:
   - include:
       file: changes/0020-add-style-to-try-ons.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/0021-migrate-notification-type-to-order-tryon.yaml
+      relativeToChangelogFile: true

@@ -15,14 +15,14 @@ public interface NotificationService {
     // FCM 토큰 없는 사용자도 알림 DB 저장은 그대로 진행 (FCM만 skip).
     com.fitpick.domain.notification.entity.Notification notifyOrderStatusChange(Order order, String comment);
 
-    // 가상 피팅 완료 시 FCM 발송만 수행 (알림 DB 저장 X — /api/v1/notifications 목록에 노출하지 않음).
-    // data = { tryOnId, generatedImageUrl } (모두 string).
+    // 가상 피팅 완료 시 알림 DB 저장 + FCM 발송.
+    // type=TRYON, tryOnId/imageUrl 채움. data = { tryOnId, notificationId, generatedImageUrl } (모두 string).
     // 호출 전 tryOn.status == DONE 이어야 하며 generatedImageUrl 이 채워져 있어야 함.
-    void notifyTryOnDone(TryOn tryOn);
+    com.fitpick.domain.notification.entity.Notification notifyTryOnDone(TryOn tryOn);
 
-    // 가상 피팅 실패 시 FCM 발송만 수행 (알림 DB 저장 X — /api/v1/notifications 목록에 노출하지 않음).
-    // data = { tryOnId } (string). 비동기 처리 흐름에서 실패 케이스를 프론트에 알리기 위함.
-    void notifyTryOnFailed(Long userId, Long tryOnId);
+    // 가상 피팅 실패 시 알림 DB 저장 + FCM 발송.
+    // type=TRYON, tryOnId 채움. data = { tryOnId, notificationId } (string).
+    com.fitpick.domain.notification.entity.Notification notifyTryOnFailed(Long userId, Long tryOnId);
 
     // (추가) 내 알림 목록 조회 — 읽지 않은(isRead=false) 알림만 반환
     PageResponse<NotificationResponse> getMyNotifications(Long userId, Pageable pageable);

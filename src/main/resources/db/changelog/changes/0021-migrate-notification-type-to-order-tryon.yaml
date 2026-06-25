@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0021-migrate-notification-type-to-order-tryon
+      author: fitpick
+      changes:
+        - sql:
+            sql: UPDATE notifications SET notification_type='ORDER' WHERE notification_type='PICKUP_READY'

@@ -37,13 +37,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public Notification notifyOrderStatusChange(Order order, String comment) {
         // 1) Notification DB 저장 — title은 "#{orderId}", body는 관리자가 입력한 코멘트.
-        // 시연용으로 type은 PICKUP_READY 차용 (추후 상태별 분기 필요시 enum 확장).
         Notification saved = notificationRepository.save(Notification.create(
                 order.getUserId(),
                 order.getId(),
                 "#" + order.getId(),
                 comment,
-                NotificationType.PICKUP_READY
+                NotificationType.ORDER
         ));
 
         // 2) FCM 발송 — 토큰 없거나 FCM 비활성이어도 FcmService가 알아서 skip (예외 던지지 않음).
@@ -60,37 +59,60 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void notifyTryOnDone(TryOn tryOn) {
-        // 가상 피팅 완료는 FCM 푸시만 보내고 알림 DB에는 저장하지 않는다.
-        // Why: /api/v1/notifications 목록에 노출되지 않게 하려는 요구사항.
-        String title = NotificationType.TRY_ON_DONE.getTitle();
-        String body = NotificationType.TRY_ON_DONE.getBody();
+    @Transactional
+    public Notification notifyTryOnDone(TryOn tryOn) {
+        String title = NotificationType.TRYON.getTitle();
+        String body = NotificationType.TRYON.getBody();
+
+        Notification saved = notificationRepository.save(Notification.createForTryOn(
+                tryOn.getUserId(),
+                tryOn.getId(),
+                title,
+                body,
+                tryOn.getGeneratedImageUrl(),
+                NotificationType.TRYON
+        ));
 
         User user = userRepository.findById(tryOn.getUserId()).orElse(null);
         String token = (user != null) ? user.getFcmToken() : null;
 
         Map<String, String> data = new HashMap<>();
         data.put("tryOnId", String.valueOf(tryOn.getId()));
+        data.put("notificationId", String.valueOf(saved.getId()));
         if (tryOn.getGeneratedImageUrl() != null) {
             data.put("generatedImageUrl", tryOn.getGeneratedImageUrl());
         }
 
         fcmService.send(token, title, body, data);
+
+        return saved;
     }
 
     @Override
-    public void notifyTryOnFailed(Long userId, Long tryOnId) {
-        // 가상 피팅 실패도 FCM 푸시만 보내고 알림 DB에는 저장하지 않는다.
-        String title = NotificationType.TRY_ON_FAILED.getTitle();
-        String body = NotificationType.TRY_ON_FAILED.getBody();
+    @Transactional
+    public Notification notifyTryOnFailed(Long userId, Long tryOnId) {
+        String title = "가상 피팅 실패";
+        String body = "가상 피팅 이미지 생성에 실패했습니다. 다시 시도해주세요.";
+
+        Notification saved = notificationRepository.save(Notification.createForTryOn(
+                userId,
+                tryOnId,
+                title,
+                body,
+                null,
+                NotificationType.TRYON
+        ));
 
         User user = userRepository.findById(userId).orElse(null);
         String token = (user != null) ? user.getFcmToken() : null;
 
         Map<String, String> data = new HashMap<>();
         data.put("tryOnId", String.valueOf(tryOnId));
+        data.put("notificationId", String.valueOf(saved.getId()));
 
         fcmService.send(token, title, body, data);
+
+        return saved;
     }
 
     @Override
@@ -134,9 +156,9 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new CustomException(AuthErrorCode.USER_NOT_FOUND));
 
         // 알림 DB 저장 — 클라이언트가 read 처리 호출 가능하게 함.
-        // 시연 전 제거 예정 API라 type은 기존 PICKUP_READY 차용.
+        // 시연 전 제거 예정 API라 type은 ORDER 차용.
         Notification saved = notificationRepository.save(Notification.create(
-                userId, null, request.title(), request.body(), NotificationType.PICKUP_READY
+                userId, null, request.title(), request.body(), NotificationType.ORDER
         ));
 
         // FCM data 페이로드: 클라이언트 data + notificationId 자동 주입.

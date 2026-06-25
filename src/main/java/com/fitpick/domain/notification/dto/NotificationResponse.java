@@ -11,19 +11,22 @@ public record NotificationResponse(
         @Schema(description = "알림 ID", example = "1")
         Long notificationId,
 
-        @Schema(description = "연관 주문 ID (주문 알림인 경우)", example = "10")
+        @Schema(description = "연관 주문 ID (notificationType=ORDER 인 경우, 그 외 null)", example = "10")
         Long orderId,
 
-        @Schema(description = "알림 제목", example = "픽업 준비 완료")
+        @Schema(description = "연관 가상 피팅 ID (notificationType=TRYON 인 경우, 그 외 null)", example = "5")
+        Long tryOnId,
+
+        @Schema(description = "알림 제목", example = "#10")
         String title,
 
         @Schema(description = "알림 본문", example = "주문하신 상품이 픽업 준비되었습니다.")
         String body,
 
-        @Schema(description = "알림 첨부 이미지 URL (TRY_ON_DONE 이면 generatedImageUrl)", example = "https://.../result.png")
+        @Schema(description = "알림 첨부 이미지 URL (TRYON 이면 generatedImageUrl)", example = "https://.../result.png")
         String imageUrl,
 
-        @Schema(description = "알림 유형 (PICKUP_READY, TRY_ON_DONE 등)", example = "PICKUP_READY")
+        @Schema(description = "알림 유형 (ORDER | TRYON)", example = "ORDER")
         String notificationType,
 
         @Schema(description = "읽음 여부", example = "false")
@@ -36,6 +39,7 @@ public record NotificationResponse(
         return new NotificationResponse(
                 n.getId(),
                 n.getOrderId(),
+                n.getTryOnId(),
                 n.getTitle(),
                 n.getBody(),
                 n.getImageUrl(),
