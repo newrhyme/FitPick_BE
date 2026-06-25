@@ -28,7 +28,7 @@ public class CartController implements CartApiDocs {
             @Valid @RequestBody CartItemAddRequest request
     ) {
         CartResponse response = cartService.addItem(userDetails.getUserId(), request);
-        return ApiResponse.success(SuccessCode.OK, response);
+        return ApiResponse.success(SuccessCode.CART_ITEM_ADDED, response);
     }
 
     @GetMapping

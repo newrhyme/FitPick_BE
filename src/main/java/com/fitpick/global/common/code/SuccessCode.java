@@ -9,6 +9,7 @@ public enum SuccessCode {
     READ_SUCCESS(HttpStatus.OK, "S201", "조회에 성공했습니다."),
     UPDATE_SUCCESS(HttpStatus.OK, "S202", "수정에 성공했습니다."),
     LOGIN_SUCCESS(HttpStatus.OK, "S203", "로그인에 성공했습니다."),
+    CART_ITEM_ADDED(HttpStatus.OK, "S204", "장바구니에 성공적으로 담았습니다"),
 
     // 201 CREATED
     CREATED(HttpStatus.CREATED, "S210", "리소스가 생성되었습니다."),
