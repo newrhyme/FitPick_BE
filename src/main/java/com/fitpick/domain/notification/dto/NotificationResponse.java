@@ -14,9 +14,6 @@ public record NotificationResponse(
         @Schema(description = "연관 주문 ID (주문 알림인 경우)", example = "10")
         Long orderId,
 
-        @Schema(description = "연관 가상 피팅 ID (TRY_ON_DONE 인 경우)", example = "5")
-        Long tryOnId,
-
         @Schema(description = "알림 제목", example = "픽업 준비 완료")
         String title,
 
@@ -39,7 +36,6 @@ public record NotificationResponse(
         return new NotificationResponse(
                 n.getId(),
                 n.getOrderId(),
-                n.getTryOnId(),
                 n.getTitle(),
                 n.getBody(),
                 n.getImageUrl(),
