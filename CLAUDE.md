@@ -323,7 +323,7 @@ PAID -> PREPARING
 PREPARING -> READY
 READY -> PICKED_UP
 
-When an order is changed to READY, a PICKUP_READY notification is created for the customer.
+When an order is changed to READY, a notification (type=ORDER) is created for the customer with the admin-provided comment as its body.
 At this point an FCM push may be sent if the user has a registered fcm_token (see FCM section below).
 
 ⸻
@@ -337,24 +337,27 @@ Completed:
 * Unread count (GET /api/v1/notifications/unread-count) — for red-dot badge
 * Mark single as read (PATCH /api/v1/notifications/{notificationId}/read) — idempotent
 * Mark all as read (PATCH /api/v1/notifications/read-all)
-* Order status change notification + FCM push (admin status change requires a "comment" field; used as FCM body)
-* Try-on completion notification + FCM push (TRY_ON_DONE)
-* Try-on failure notification + FCM push (TRY_ON_FAILED)
+* Order status change notification + FCM push (notification_type=ORDER; admin status change requires a "comment" field; used as FCM body)
+* Try-on completion notification + FCM push (notification_type=TRYON, tryOnId set on the row)
+* Try-on failure notification + FCM push (notification_type=TRYON, tryOnId set, hardcoded title/body)
 * FCM token persistence (users.fcm_token)
-* FCM test send API (POST /api/v1/notifications/test-fcm) — TEMP, to be removed before demo
+* FCM test send API (POST /api/v1/notifications/test-fcm) — retained as device-token verification utility
 * Firebase Admin SDK integrated (FcmService)
 
 NotificationType values:
 
-PICKUP_READY
-TRY_ON_DONE
-TRY_ON_FAILED
+ORDER       — all order status-change pushes (covers what used to be PICKUP_READY)
+TRYON       — both try-on completion and failure
+
+(Pre-0021 the enum was PICKUP_READY / TRY_ON_DONE / TRY_ON_FAILED; changeset 0021 collapsed it to ORDER / TRYON and migrated existing rows from PICKUP_READY to ORDER.)
 
 Status:
 
-In-app notifications via the notifications table are fully wired end-to-end.
-FCM real-send is integrated through FcmService for order status changes and try-on completion/failure.
-The /test-fcm endpoint is a temporary 3-step integration check and should be removed before the final demo.
+In-app notifications via the notifications table are fully wired end-to-end for BOTH order status changes (ORDER) AND try-on completion/failure (TRYON).
+All triggers persist a row in notifications AND fire an FCM push — so they all appear in GET /api/v1/notifications and contribute to unread-count.
+For TRYON rows the notifications.try_on_id FK is set; clients can navigate to GET /api/v1/try-ons/{tryOnId} for the generated image URL.
+FCM real-send is integrated through FcmService for all triggers above.
+The /test-fcm endpoint is kept as a device-token verification utility (sends a push to the caller's own fcm_token; persists a row with type=ORDER so the client can mark it as read).
 
 ⸻
 
@@ -372,16 +375,17 @@ Completed:
 * Background removed + TPO-matched new background generation
 * style field overrides automatic TPO mapping when provided
 * Async processing via dedicated thread pool (tryOnExecutor, core=2 / max=4 / queue=20)
-* On DONE: TRY_ON_DONE notification + FCM push
-* On FAILED: TRY_ON_FAILED notification + FCM push
+* On DONE: notifications row (type=TRYON, tryOnId set) + FCM push (data includes tryOnId, notificationId, generatedImageUrl)
+* On FAILED: notifications row (type=TRYON, tryOnId set, hardcoded failure title/body) + FCM push
 * Output image size: 1024x1024 (reduced from 1024x1536 for faster response)
 
 Async flow:
 
 1. Controller saves a PROCESSING row in REQUIRES_NEW so the row is committed immediately
-2. asyncProcessor.process(...) runs in tryOnExecutor — OpenAI call → S3 upload → DB DONE/FAILED → notification
+2. asyncProcessor.process(...) runs in tryOnExecutor — OpenAI call → S3 upload → DB DONE/FAILED → persist notifications row + FCM push
 3. Response is returned right away with status=PROCESSING and generatedImageUrl=null
-4. Client polls GET /api/v1/try-ons/{tryOnId} or waits for the FCM push to fetch the final image
+4. Client receives the FCM push and/or sees a new entry in GET /api/v1/notifications (type=TRYON); re-fetches GET /api/v1/try-ons/{tryOnId} for the final image
+5. The notifications row's try_on_id FK lets the client deep-link to the try-on detail without an extra lookup
 
 Role separation:
 
@@ -464,6 +468,27 @@ AWS S3 credentials / bucket    (image upload)
 Firebase service account JSON  (FCM)
 MYSQL_HOST_PORT                (local port collision avoidance)
 
+MySQL host port binding on EC2:
+
+compose.prod.yaml binds the mysql container to 127.0.0.1:3306 only.
+This means MySQL is reachable from the EC2 host (e.g. SSH-tunneled DB client) but NOT from the public internet.
+Do NOT change this to 0.0.0.0:3306 — security group is not the only safeguard.
+
+Local DB client access via SSH tunnel (example):
+
+ssh -i <key> -N -L 3306:127.0.0.1:3306 ubuntu@3.39.34.202
+# then connect DB client to localhost:3306
+
+CI/CD:
+
+.github/workflows/ci.yml      — runs on push to main/develop and PRs: ./gradlew clean build -x test
+.github/workflows/deploy.yml  — runs on push to main: SSH into EC2 → git pull origin main →
+                                ./gradlew clean bootJar -x test →
+                                docker compose -f compose.prod.yaml --env-file .env up -d --build
+
+Important: if the EC2 working tree has unstaged modifications, git pull will fail and the deploy job aborts.
+Never scp/edit files directly on EC2 — always go through local → commit → push so the next deploy stays clean.
+
 ⸻
 
 6. Critical Warnings
@@ -493,8 +518,9 @@ Currently applied changesets:
 0018-extend-nfc-tags-to-options
 0019-extend-notifications-for-try-on (adds notifications.try_on_id FK + image_url)
 0020-add-style-to-try-ons (adds try_ons.style)
+0021-migrate-notification-type-to-order-tryon (UPDATE notifications SET notification_type='ORDER' WHERE notification_type='PICKUP_READY')
 
-Add new changesets as 0021-..., 0022-..., etc.
+Add new changesets as 0022-..., 0023-..., etc.
 
 Order data should be created through APIs whenever possible.
 
@@ -550,10 +576,10 @@ Mark order as PICKED_UP
 
 2. FCM End-to-End Polish
 
-FCM is integrated but still needs:
+FCM is integrated but still benefits from:
 
-Removal of /api/v1/notifications/test-fcm before final demo
 Verification that READY transition reliably triggers push for users with fcm_token
+Verification that TRY_ON_DONE / TRY_ON_FAILED pushes reach the device (no notifications-table fallback)
 Handling of TOKEN_EMPTY / FCM_DISABLED / network failure paths in production logs
 
 ⸻
@@ -572,9 +598,8 @@ If the demo is close, follow this order:
 
 1. End-to-End demo flow check (CUSTOMER + STAFF)
 2. Fix any field or response gaps surfaced by the E2E run
-3. FCM READY-push verification on the live server
-4. Remove /api/v1/notifications/test-fcm
-5. Swagger error documentation
+3. FCM READY-push + TRY_ON_DONE/FAILED-push verification on the live server
+4. Swagger error documentation
 
 ⸻
 
@@ -667,11 +692,11 @@ DELETE /api/v1/cart
 
 Notifications:
 
-GET   /api/v1/notifications                          (returns only isRead=false)
+GET   /api/v1/notifications                          (returns only isRead=false; both ORDER and TRYON rows are visible)
 GET   /api/v1/notifications/unread-count
 PATCH /api/v1/notifications/{notificationId}/read    (idempotent)
 PATCH /api/v1/notifications/read-all
-POST  /api/v1/notifications/test-fcm                 (TEMP — remove before final demo)
+POST  /api/v1/notifications/test-fcm                 (device-token verification — sends a push to the caller's own fcm_token)
 
 My Page:
 
