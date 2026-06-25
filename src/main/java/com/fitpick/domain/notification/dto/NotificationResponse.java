@@ -23,9 +23,6 @@ public record NotificationResponse(
         @Schema(description = "알림 본문", example = "주문하신 상품이 픽업 준비되었습니다.")
         String body,
 
-        @Schema(description = "알림 첨부 이미지 URL (TRYON 이면 generatedImageUrl)", example = "https://.../result.png")
-        String imageUrl,
-
         @Schema(description = "알림 유형 (ORDER | TRYON)", example = "ORDER")
         String notificationType,
 
@@ -42,7 +39,6 @@ public record NotificationResponse(
                 n.getTryOnId(),
                 n.getTitle(),
                 n.getBody(),
-                n.getImageUrl(),
                 n.getNotificationType().name(),
                 n.getIsRead(),
                 n.getCreatedAt()
